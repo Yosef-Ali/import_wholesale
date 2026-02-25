@@ -1,0 +1,18 @@
+{
+  "doctype": "DocType",
+  "name": "Price Tier Rule",
+  "module": "Wholesale Pricing",
+  "istable": 1,
+
+  "fields": [
+    {"fieldname": "item_code",       "fieldtype": "Link",    "label": "Item", "options": "Item", "in_list_view": 1, "columns": 3,
+      "description": "Leave blank for default rule applying to all items"},
+    {"fieldname": "item_name",       "fieldtype": "Data",    "label": "Item Name", "fetch_from": "item_code.item_name", "read_only": 1, "in_list_view": 1, "columns": 2},
+    {"fieldname": "min_qty",         "fieldtype": "Float",   "label": "Min Qty", "in_list_view": 1, "columns": 1, "reqd": 1},
+    {"fieldname": "max_qty",         "fieldtype": "Float",   "label": "Max Qty", "in_list_view": 1, "columns": 1},
+    {"fieldname": "discount_percent","fieldtype": "Percent",  "label": "Discount %", "in_list_view": 1, "columns": 1},
+    {"fieldname": "rate",            "fieldtype": "Currency", "label": "Special Rate (ETB)", "in_list_view": 1, "columns": 2,
+      "options": "Company:company:default_currency",
+      "description": "If set, overrides standard rate instead of applying discount"}
+  ]
+}

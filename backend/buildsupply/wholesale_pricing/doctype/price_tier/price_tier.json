@@ -1,0 +1,33 @@
+{
+  "doctype": "DocType",
+  "name": "Price Tier",
+  "module": "Wholesale Pricing",
+  "naming_rule": "Expression",
+  "autoname": "PT-.#####",
+  "title_field": "tier_name",
+  "track_changes": 1,
+
+  "permissions": [
+    {"role": "BuildSupply Admin", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1},
+    {"role": "Sales Manager",    "read": 1, "write": 1, "create": 1, "print": 1},
+    {"role": "Sales Rep",        "read": 1},
+    {"role": "Accountant",       "read": 1}
+  ],
+
+  "fields": [
+    {"fieldname": "sec_tier",       "fieldtype": "Section Break", "label": "Tier Details"},
+    {"fieldname": "tier_name",      "fieldtype": "Data",   "label": "Tier Name", "reqd": 1, "bold": 1, "unique": 1,
+      "description": "e.g. Wholesale A, Wholesale B, Contractor, Government"},
+    {"fieldname": "description",    "fieldtype": "Small Text", "label": "Description"},
+    {"fieldname": "col_t1",         "fieldtype": "Column Break"},
+    {"fieldname": "discount_percent","fieldtype": "Percent","label": "Default Discount %", "description": "Applied when no specific item rule exists"},
+    {"fieldname": "min_order_value","fieldtype": "Currency","label": "Minimum Order Value (ETB)", "options": "Company:company:default_currency"},
+    {"fieldname": "is_active",      "fieldtype": "Check",  "label": "Active", "default": 1},
+
+    {"fieldname": "sec_rules",      "fieldtype": "Section Break", "label": "Item-Specific Pricing Rules"},
+    {"fieldname": "rules",          "fieldtype": "Table",  "label": "Pricing Rules", "options": "Price Tier Rule"},
+
+    {"fieldname": "sec_customers",  "fieldtype": "Section Break", "label": "Assigned Customers"},
+    {"fieldname": "customer_note",  "fieldtype": "HTML",   "options": "<p class='text-muted'>Assign this tier to customers via the Customer master \u2192 <b>Price Tier</b> field.</p>"}
+  ]
+}

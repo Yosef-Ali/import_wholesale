@@ -1,0 +1,33 @@
+{
+  "doctype": "DocType",
+  "name": "Credit Limit Log",
+  "module": "Customer Credit",
+  "naming_rule": "Expression",
+  "autoname": "CL-.YYYY.-.#####",
+  "title_field": "customer_name",
+  "track_changes": 1,
+
+  "permissions": [
+    {"role": "BuildSupply Admin", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1},
+    {"role": "Sales Manager",    "read": 1, "write": 1, "create": 1, "print": 1},
+    {"role": "Accountant",       "read": 1, "write": 1, "create": 1, "print": 1},
+    {"role": "Sales Rep",        "read": 1}
+  ],
+
+  "fields": [
+    {"fieldname": "sec_customer",    "fieldtype": "Section Break", "label": "Customer"},
+    {"fieldname": "customer",        "fieldtype": "Link",     "label": "Customer", "options": "Customer", "reqd": 1, "bold": 1},
+    {"fieldname": "customer_name",   "fieldtype": "Data",     "label": "Customer Name", "fetch_from": "customer.customer_name", "read_only": 1},
+    {"fieldname": "col_c1",          "fieldtype": "Column Break"},
+    {"fieldname": "change_date",     "fieldtype": "Date",     "label": "Change Date", "default": "Today", "reqd": 1},
+    {"fieldname": "changed_by",      "fieldtype": "Link",     "label": "Changed By", "options": "User", "default": "__user", "read_only": 1},
+
+    {"fieldname": "sec_limits",      "fieldtype": "Section Break", "label": "Credit Limit Change"},
+    {"fieldname": "previous_limit",  "fieldtype": "Currency", "label": "Previous Limit (ETB)", "options": "Company:company:default_currency", "read_only": 1},
+    {"fieldname": "new_limit",       "fieldtype": "Currency", "label": "New Limit (ETB)", "options": "Company:company:default_currency", "reqd": 1},
+    {"fieldname": "col_l1",          "fieldtype": "Column Break"},
+    {"fieldname": "reason",          "fieldtype": "Select",   "label": "Reason",
+      "options": "\nNew Customer\nGood Payment History\nIncreased Volume\nManagement Approval\nCredit Review\nReduced \u2013 Late Payments\nReduced \u2013 Risk Assessment\nAccount Suspended"},
+    {"fieldname": "notes",           "fieldtype": "Small Text","label": "Notes"}
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "doctype": "DocType",
+  "name": "Import Shipment",
+  "module": "Import Tracking",
+  "naming_rule": "Expression",
+  "autoname": "IMP-.YYYY.-.#####",
+  "title_field": "shipment_title",
+  "is_submittable": 1,
+  "track_changes": 1,
+
+  "permissions": [
+    {"role": "BuildSupply Admin", "read": 1, "write": 1, "create": 1, "submit": 1, "cancel": 1, "amend": 1, "delete": 1, "print": 1},
+    {"role": "Import Manager",   "read": 1, "write": 1, "create": 1, "submit": 1, "cancel": 1, "print": 1},
+    {"role": "Warehouse Manager","read": 1, "write": 1, "print": 1},
+    {"role": "Accountant",       "read": 1, "print": 1},
+    {"role": "Sales Manager",    "read": 1}
+  ],
+
+  "fields": [
+    {"fieldname": "sec_shipment",     "fieldtype": "Section Break", "label": "Shipment Details"},
+    {"fieldname": "shipment_title",   "fieldtype": "Data",   "label": "Shipment Title", "reqd": 1, "bold": 1},
+    {"fieldname": "purchase_order",   "fieldtype": "Link",   "label": "Purchase Order", "options": "Purchase Order"},
+    {"fieldname": "supplier",         "fieldtype": "Link",   "label": "Supplier", "options": "Supplier", "reqd": 1},
+    {"fieldname": "supplier_name",    "fieldtype": "Data",   "label": "Supplier Name", "fetch_from": "supplier.supplier_name", "read_only": 1},
+    {"fieldname": "col_s1",           "fieldtype": "Column Break"},
+    {"fieldname": "status",           "fieldtype": "Select", "label": "Status", "reqd": 1, "default": "Ordered",
+      "options": "\nOrdered\nIn Production\nShipped\nIn Transit\nAt Port\nCustoms Clearance\nArrived \u2013 Pending Clearance\nCleared\nIn Warehouse\nCompleted\nCancelled"},
+    {"fieldname": "shipping_method",  "fieldtype": "Select", "label": "Shipping Method",
+      "options": "\nSea Freight (FCL)\nSea Freight (LCL)\nAir Freight\nLand Transport\nMultimodal"},
+    {"fieldname": "container_number", "fieldtype": "Data",   "label": "Container / AWB Number"},
+
+    {"fieldname": "sec_dates",        "fieldtype": "Section Break", "label": "Dates & Tracking"},
+    {"fieldname": "order_date",       "fieldtype": "Date",   "label": "Order Date", "default": "Today", "reqd": 1},
+    {"fieldname": "ship_date",        "fieldtype": "Date",   "label": "Ship Date"},
+    {"fieldname": "eta",              "fieldtype": "Date",   "label": "ETA (Estimated Arrival)"},
+    {"fieldname": "col_d1",           "fieldtype": "Column Break"},
+    {"fieldname": "arrival_date",     "fieldtype": "Date",   "label": "Actual Arrival Date"},
+    {"fieldname": "clearance_date",   "fieldtype": "Date",   "label": "Customs Clearance Date"},
+    {"fieldname": "warehouse_date",   "fieldtype": "Date",   "label": "Date Received in Warehouse"},
+
+    {"fieldname": "sec_origin",       "fieldtype": "Section Break", "label": "Origin & Destination"},
+    {"fieldname": "origin_country",   "fieldtype": "Data",   "label": "Origin Country"},
+    {"fieldname": "origin_port",      "fieldtype": "Data",   "label": "Origin Port / City"},
+    {"fieldname": "col_o1",           "fieldtype": "Column Break"},
+    {"fieldname": "destination_port",  "fieldtype": "Data",  "label": "Destination Port", "default": "Djibouti Port"},
+    {"fieldname": "destination_warehouse", "fieldtype": "Link", "label": "Destination Warehouse", "options": "Warehouse"},
+
+    {"fieldname": "sec_costs",        "fieldtype": "Section Break", "label": "Cost Breakdown (ETB)"},
+    {"fieldname": "fob_cost",         "fieldtype": "Currency", "label": "FOB Cost", "options": "Company:company:default_currency"},
+    {"fieldname": "freight_cost",     "fieldtype": "Currency", "label": "Freight Cost", "options": "Company:company:default_currency"},
+    {"fieldname": "insurance_cost",   "fieldtype": "Currency", "label": "Insurance", "options": "Company:company:default_currency"},
+    {"fieldname": "col_c1",           "fieldtype": "Column Break"},
+    {"fieldname": "customs_duty",     "fieldtype": "Currency", "label": "Customs Duty", "options": "Company:company:default_currency"},
+    {"fieldname": "sur_tax",          "fieldtype": "Currency", "label": "Surtax", "options": "Company:company:default_currency"},
+    {"fieldname": "vat",              "fieldtype": "Currency", "label": "VAT (15%)", "options": "Company:company:default_currency"},
+    {"fieldname": "other_charges",    "fieldtype": "Currency", "label": "Other Charges (Inland, Handling)", "options": "Company:company:default_currency"},
+    {"fieldname": "sec_total",        "fieldtype": "Section Break"},
+    {"fieldname": "total_landed_cost","fieldtype": "Currency", "label": "Total Landed Cost", "options": "Company:company:default_currency", "read_only": 1, "bold": 1},
+
+    {"fieldname": "sec_docs",         "fieldtype": "Section Break", "label": "Documents"},
+    {"fieldname": "bill_of_lading",   "fieldtype": "Attach",  "label": "Bill of Lading / AWB"},
+    {"fieldname": "packing_list",     "fieldtype": "Attach",  "label": "Packing List"},
+    {"fieldname": "commercial_invoice","fieldtype": "Attach", "label": "Commercial Invoice"},
+    {"fieldname": "col_doc1",         "fieldtype": "Column Break"},
+    {"fieldname": "customs_declaration","fieldtype": "Attach","label": "Customs Declaration"},
+    {"fieldname": "certificate_of_origin","fieldtype": "Attach","label": "Certificate of Origin"},
+    {"fieldname": "insurance_certificate","fieldtype": "Attach","label": "Insurance Certificate"},
+
+    {"fieldname": "sec_notes",        "fieldtype": "Section Break", "label": "Notes"},
+    {"fieldname": "notes",            "fieldtype": "Text Editor", "label": "Notes"},
+    {"fieldname": "amended_from",     "fieldtype": "Link", "label": "Amended From", "options": "Import Shipment", "read_only": 1, "no_copy": 1, "hidden": 1}
+  ]
+}

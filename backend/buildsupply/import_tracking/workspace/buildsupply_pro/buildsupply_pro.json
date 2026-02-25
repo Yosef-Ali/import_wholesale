@@ -1,0 +1,58 @@
+{
+  "charts": [],
+  "content": "[{\"id\":\"hero\",\"type\":\"header\",\"data\":{\"text\":\"<span class='orange-color'>BuildSupply</span> Pro\",\"level\":4,\"col\":12}}]",
+  "creation": "2026-02-24 00:00:00",
+  "custom_blocks": [],
+  "docstatus": 0,
+  "doctype": "Workspace",
+  "for_user": "",
+  "hide_custom": 0,
+  "icon": "stock",
+  "idx": 0,
+  "is_hidden": 0,
+  "label": "BuildSupply Pro",
+  "links": [
+    {"hidden": 0, "is_query_report": 0, "label": "Import & Procurement", "link_count": 0, "link_type": "DocType", "onboard": 0, "type": "Card Break"},
+    {"hidden": 0, "is_query_report": 0, "label": "Supplier", "link_count": 0, "link_to": "Supplier", "link_type": "DocType", "onboard": 1, "type": "Link"},
+    {"hidden": 0, "is_query_report": 0, "label": "Purchase Order", "link_count": 0, "link_to": "Purchase Order", "link_type": "DocType", "onboard": 1, "type": "Link"},
+    {"hidden": 0, "is_query_report": 0, "label": "Purchase Receipt", "link_count": 0, "link_to": "Purchase Receipt", "link_type": "DocType", "onboard": 1, "type": "Link"},
+    {"hidden": 0, "is_query_report": 0, "label": "Import Shipment", "link_count": 0, "link_to": "Import Shipment", "link_type": "DocType", "onboard": 1, "type": "Link"},
+
+    {"hidden": 0, "is_query_report": 0, "label": "Warehouse & Inventory", "link_count": 0, "link_type": "DocType", "onboard": 0, "type": "Card Break"},
+    {"hidden": 0, "is_query_report": 0, "label": "Item", "link_count": 0, "link_to": "Item", "link_type": "DocType", "onboard": 1, "type": "Link"},
+    {"hidden": 0, "is_query_report": 0, "label": "Warehouse", "link_count": 0, "link_to": "Warehouse", "link_type": "DocType", "onboard": 1, "type": "Link"},
+    {"hidden": 0, "is_query_report": 0, "label": "Stock Entry", "link_count": 0, "link_to": "Stock Entry", "link_type": "DocType", "onboard": 1, "type": "Link"},
+    {"hidden": 0, "is_query_report": 0, "label": "Stock Reconciliation", "link_count": 0, "link_to": "Stock Reconciliation", "link_type": "DocType", "onboard": 0, "type": "Link"},
+
+    {"hidden": 0, "is_query_report": 0, "label": "Wholesale Sales", "link_count": 0, "link_type": "DocType", "onboard": 0, "type": "Card Break"},
+    {"hidden": 0, "is_query_report": 0, "label": "Customer", "link_count": 0, "link_to": "Customer", "link_type": "DocType", "onboard": 1, "type": "Link"},
+    {"hidden": 0, "is_query_report": 0, "label": "Sales Order", "link_count": 0, "link_to": "Sales Order", "link_type": "DocType", "onboard": 1, "type": "Link"},
+    {"hidden": 0, "is_query_report": 0, "label": "Delivery Note", "link_count": 0, "link_to": "Delivery Note", "link_type": "DocType", "onboard": 1, "type": "Link"},
+    {"hidden": 0, "is_query_report": 0, "label": "Sales Invoice", "link_count": 0, "link_to": "Sales Invoice", "link_type": "DocType", "onboard": 1, "type": "Link"},
+    {"hidden": 0, "is_query_report": 0, "label": "Price Tier", "link_count": 0, "link_to": "Price Tier", "link_type": "DocType", "onboard": 1, "type": "Link"},
+
+    {"hidden": 0, "is_query_report": 0, "label": "Finance & Credit", "link_count": 0, "link_type": "DocType", "onboard": 0, "type": "Card Break"},
+    {"hidden": 0, "is_query_report": 0, "label": "Purchase Invoice", "link_count": 0, "link_to": "Purchase Invoice", "link_type": "DocType", "onboard": 1, "type": "Link"},
+    {"hidden": 0, "is_query_report": 0, "label": "Payment Entry", "link_count": 0, "link_to": "Payment Entry", "link_type": "DocType", "onboard": 1, "type": "Link"},
+    {"hidden": 0, "is_query_report": 0, "label": "Credit Limit Log", "link_count": 0, "link_to": "Credit Limit Log", "link_type": "DocType", "onboard": 1, "type": "Link"}
+  ],
+  "modified": "2026-02-24 00:00:00",
+  "modified_by": "Administrator",
+  "module": "Import Tracking",
+  "name": "BuildSupply Pro",
+  "owner": "Administrator",
+  "parent_page": "",
+  "public": 1,
+  "restrict_to_domain": "",
+  "roles": [],
+  "sequence_id": 1,
+  "shortcuts": [
+    {"color": "Orange", "doc_view": "List", "label": "Import Shipments", "link_to": "Import Shipment", "type": "DocType"},
+    {"color": "Blue",   "doc_view": "List", "label": "Purchase Orders", "link_to": "Purchase Order", "type": "DocType"},
+    {"color": "Green",  "doc_view": "List", "label": "Sales Orders", "link_to": "Sales Order", "type": "DocType"},
+    {"color": "Cyan",   "doc_view": "List", "label": "Items", "link_to": "Item", "type": "DocType"},
+    {"color": "Purple", "doc_view": "List", "label": "Customers", "link_to": "Customer", "type": "DocType"},
+    {"color": "Red",    "doc_view": "List", "label": "Invoices", "link_to": "Sales Invoice", "type": "DocType"}
+  ],
+  "title": "BuildSupply Pro"
+}

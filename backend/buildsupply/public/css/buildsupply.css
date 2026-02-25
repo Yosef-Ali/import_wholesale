@@ -1,0 +1,9 @@
+/* BuildSupply Pro — Custom Styles */
+:root {
+  --bs-primary: #E67E22;
+  --bs-primary-dark: #D35400;
+  --bs-secondary: #2C3E50;
+  --bs-success: #27AE60;
+  --bs-warning: #F39C12;
+  --bs-danger: #E74C3C;
+}

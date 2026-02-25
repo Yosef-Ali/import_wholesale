@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────
+   PRECISION COMMERCE — Design System
+   Fraunces / Instrument Sans / JetBrains Mono
+───────────────────────────────────────── */
+
+:root {
+  /* Brand */
+  --accent:       #E8521A;
+  --accent-dim:   #BF4114;
+  --accent-glow:  rgb(232 82 26 / 0.15);
+
+  /* Text */
+  --ink:          #111110;
+  --ink-2:        #3C3B38;
+  --muted:        #888580;
+
+  /* Surfaces */
+  --bg:           #F2F0EB;
+  --card:         #FFFFFF;
+  --border:       #E2DED7;
+
+  /* Sidebar */
+  --sidebar:      #09090B;
+  --sidebar-2:    #0F1014;
+  --sidebar-border: #1C1C1E;
+  --sidebar-muted: #38383A;
+  --sidebar-text:  #A1A1AA;
+  --sidebar-active: #FAFAFA;
+
+  /* Fonts */
+  --font-display: 'Fraunces', serif;
+  --font-body:    'Instrument Sans', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg);
+  color: var(--ink);
+}
+
+/* ── Form primitives ── */
+.label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+  font-family: var(--font-body);
+}
+
+.input {
+  width: 100%;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.875rem;
+  font-family: var(--font-body);
+  border: 1.5px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--card);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.anim-fade-up   { animation: fadeUp    0.45s cubic-bezier(.22,.68,0,1.2) both; }
+.anim-fade-in   { animation: fadeIn    0.4s  ease both; }
+.anim-scale-in  { animation: scaleIn  0.4s  cubic-bezier(.22,.68,0,1.2) both; }
+.anim-slide-r   { animation: slideRight 0.35s ease both; }

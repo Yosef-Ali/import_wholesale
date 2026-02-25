@@ -1,0 +1,9 @@
+[project]
+name = "buildsupply"
+version = "1.0.0"
+description = "BuildSupply Pro — Import & Wholesale Management for Construction Materials"
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
