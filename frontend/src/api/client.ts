@@ -2,6 +2,7 @@
  * Frappe REST API client for BuildSupply Pro
  */
 const BASE = '/api';
+const DEV_BYPASS = import.meta.env.DEV;
 
 interface FrappeListParams {
   doctype: string;
@@ -55,48 +56,75 @@ export async function getLoggedUser(): Promise<string | null> {
 export async function getList<T = Record<string, unknown>>(
   params: FrappeListParams
 ): Promise<T[]> {
-  const qs = new URLSearchParams();
-  qs.set('fields', JSON.stringify(params.fields || ['*']));
-  if (params.filters) qs.set('filters', JSON.stringify(params.filters));
-  if (params.order_by) qs.set('order_by', params.order_by);
-  if (params.limit_page_length) qs.set('limit_page_length', String(params.limit_page_length));
-  if (params.limit_start) qs.set('limit_start', String(params.limit_start));
+  try {
+    const qs = new URLSearchParams();
+    qs.set('fields', JSON.stringify(params.fields || ['*']));
+    if (params.filters) qs.set('filters', JSON.stringify(params.filters));
+    if (params.order_by) qs.set('order_by', params.order_by);
+    if (params.limit_page_length) qs.set('limit_page_length', String(params.limit_page_length));
+    if (params.limit_start) qs.set('limit_start', String(params.limit_start));
 
-  const res = await fetch(
-    `${BASE}/resource/${encodeURIComponent(params.doctype)}?${qs}`,
-    { credentials: 'include' }
-  );
-  if (!res.ok) throw new Error(`Failed to fetch ${params.doctype}`);
-  const json: FrappeResponse<T[]> = await res.json();
-  return json.data;
+    const res = await fetch(
+      `${BASE}/resource/${encodeURIComponent(params.doctype)}?${qs}`,
+      { credentials: 'include' }
+    );
+    if (!res.ok) throw new Error(`Failed to fetch ${params.doctype}`);
+    const json: FrappeResponse<T[]> = await res.json();
+    return json.data;
+  } catch (err) {
+    if (DEV_BYPASS) {
+      console.warn(`[DEV] getList(${params.doctype}) failed, returning mock data`);
+      return getDevMockList(params.doctype) as T[];
+    }
+    throw err;
+  }
 }
 
 export async function getDoc<T = Record<string, unknown>>(
   doctype: string,
   name: string
 ): Promise<T> {
-  const res = await fetch(
-    `${BASE}/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`,
-    { credentials: 'include' }
-  );
-  if (!res.ok) throw new Error(`Failed to fetch ${doctype}/${name}`);
-  const json: FrappeResponse<T> = await res.json();
-  return json.data;
+  try {
+    const res = await fetch(
+      `${BASE}/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`,
+      { credentials: 'include' }
+    );
+    if (!res.ok) throw new Error(`Failed to fetch ${doctype}/${name}`);
+    const json: FrappeResponse<T> = await res.json();
+    return json.data;
+  } catch (err) {
+    if (DEV_BYPASS) {
+      console.warn(`[DEV] getDoc(${doctype}, ${name}) failed, returning mock data`);
+      const list = getDevMockList(doctype) || [];
+      const found = list.find((item: any) => item.name === name);
+      if (found) return found as T;
+      throw new Error(`Mock document ${name} not found in ${doctype}`);
+    }
+    throw err;
+  }
 }
 
 export async function createDoc<T = Record<string, unknown>>(
   doctype: string,
-  data: Record<string, unknown>
+  data: Partial<T>
 ): Promise<T> {
-  const res = await fetch(`${BASE}/resource/${encodeURIComponent(doctype)}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': await getCsrfToken() },
-    body: JSON.stringify(data),
-    credentials: 'include',
-  });
-  if (!res.ok) throw new Error(`Failed to create ${doctype}`);
-  const json: FrappeResponse<T> = await res.json();
-  return json.data;
+  try {
+    const res = await fetch(`${BASE}/resource/${encodeURIComponent(doctype)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': await getCsrfToken() },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error(`Failed to create ${doctype}`);
+    const json: FrappeResponse<T> = await res.json();
+    return json.data;
+  } catch (err) {
+    if (DEV_BYPASS) {
+      console.warn(`[DEV] createDoc(${doctype}) failed, returning mocked payload`);
+      return { name: `MOCK-${Date.now()}`, ...data } as unknown as T;
+    }
+    throw err;
+  }
 }
 
 export async function updateDoc<T = Record<string, unknown>>(
@@ -104,30 +132,46 @@ export async function updateDoc<T = Record<string, unknown>>(
   name: string,
   data: Record<string, unknown>
 ): Promise<T> {
-  const res = await fetch(
-    `${BASE}/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`,
-    {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': await getCsrfToken() },
-      body: JSON.stringify(data),
-      credentials: 'include',
+  try {
+    const res = await fetch(
+      `${BASE}/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': await getCsrfToken() },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      }
+    );
+    if (!res.ok) throw new Error(`Failed to update ${doctype}/${name}`);
+    const json: FrappeResponse<T> = await res.json();
+    return json.data;
+  } catch (err) {
+    if (DEV_BYPASS) {
+      console.warn(`[DEV] updateDoc(${doctype}, ${name}) failed, returning mocked payload`);
+      return { name, ...data } as unknown as T;
     }
-  );
-  if (!res.ok) throw new Error(`Failed to update ${doctype}/${name}`);
-  const json: FrappeResponse<T> = await res.json();
-  return json.data;
+    throw err;
+  }
 }
 
 export async function deleteDoc(doctype: string, name: string) {
-  const res = await fetch(
-    `${BASE}/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`,
-    {
-      method: 'DELETE',
-      headers: { 'X-Frappe-CSRF-Token': await getCsrfToken() },
-      credentials: 'include',
+  try {
+    const res = await fetch(
+      `${BASE}/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`,
+      {
+        method: 'DELETE',
+        headers: { 'X-Frappe-CSRF-Token': await getCsrfToken() },
+        credentials: 'include',
+      }
+    );
+    if (!res.ok) throw new Error(`Failed to delete ${doctype}/${name}`);
+  } catch (err) {
+    if (DEV_BYPASS) {
+      console.warn(`[DEV] deleteDoc(${doctype}, ${name}) failed, ignored in mock mode`);
+      return;
     }
-  );
-  if (!res.ok) throw new Error(`Failed to delete ${doctype}/${name}`);
+    throw err;
+  }
 }
 
 // ── Call whitelisted method ──────────────────────────────────────────
@@ -136,15 +180,23 @@ export async function callMethod<T = unknown>(
   method: string,
   args?: Record<string, unknown>
 ): Promise<T> {
-  const res = await fetch(`${BASE}/method/${method}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': await getCsrfToken() },
-    body: JSON.stringify(args || {}),
-    credentials: 'include',
-  });
-  if (!res.ok) throw new Error(`Method ${method} failed`);
-  const json = await res.json();
-  return json.message;
+  try {
+    const res = await fetch(`${BASE}/method/${method}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': await getCsrfToken() },
+      body: JSON.stringify(args || {}),
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error(`Method ${method} failed`);
+    const json = await res.json();
+    return json.message;
+  } catch (err) {
+    if (DEV_BYPASS) {
+      console.warn(`[DEV] callMethod(${method}) failed, returning mock data`);
+      return getDevMockData(method, args) as T;
+    }
+    throw err;
+  }
 }
 
 // ── CSRF token ───────────────────────────────────────────────────────
@@ -171,12 +223,146 @@ export async function getCount(
   doctype: string,
   filters?: Record<string, unknown> | unknown[][]
 ): Promise<number> {
-  const qs = new URLSearchParams();
-  qs.set('doctype', doctype);
-  if (filters) qs.set('filters', JSON.stringify(filters));
-  const res = await fetch(`${BASE}/method/frappe.client.get_count?${qs}`, {
-    credentials: 'include',
-  });
-  const json = await res.json();
-  return json.message;
+  try {
+    const qs = new URLSearchParams();
+    qs.set('doctype', doctype);
+    if (filters) qs.set('filters', JSON.stringify(filters));
+    const res = await fetch(`${BASE}/method/frappe.client.get_count?${qs}`, {
+      credentials: 'include',
+    });
+    const json = await res.json();
+    return json.message;
+  } catch {
+    if (DEV_BYPASS) return 0;
+    throw new Error(`Count failed for ${doctype}`);
+  }
+}
+
+// ── Dev mock data (only used when backend is down in dev mode) ───────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getDevMockData(method: string, _args?: Record<string, unknown>): any {
+  if (method.includes('dashboard_stats')) {
+    return {
+      total_stock_value: 18_450_000,
+      pending_po_count: 12,
+      active_shipment_count: 4,
+      monthly_sales: 3_250_000,
+      low_stock_count: 7,
+      overdue_po_count: 2,
+      stock_change: 8.3,
+    };
+  }
+  if (method.includes('get_stock_levels')) {
+    return [
+      { item_name: 'Deformed Rebar 16mm', item_code: 'STL-RB-16', actual_qty: 2400, safety_stock: 500, warehouse: 'Main Store', stock_value: 2_880_000 },
+      { item_name: 'Portland Cement 50kg', item_code: 'CMT-PC-50', actual_qty: 180, safety_stock: 200, warehouse: 'Main Store', stock_value: 324_000 },
+      { item_name: 'Ceramic Floor Tile 40x40', item_code: 'TIL-CF-40', actual_qty: 3200, safety_stock: 500, warehouse: 'Tile Warehouse', stock_value: 1_280_000 },
+      { item_name: 'Exterior Wall Paint 20L', item_code: 'PNT-EW-20', actual_qty: 45, safety_stock: 50, warehouse: 'Main Store', stock_value: 270_000 },
+      { item_name: 'PVC Pipe 4" x 6m', item_code: 'PIP-PV-4', actual_qty: 890, safety_stock: 200, warehouse: 'Pipe Yard', stock_value: 534_000 },
+      { item_name: 'Corrugated Iron Sheet', item_code: 'STL-CI-28', actual_qty: 1500, safety_stock: 300, warehouse: 'Main Store', stock_value: 1_050_000 },
+      { item_name: 'Welding Electrode 3.2mm', item_code: 'STL-WE-32', actual_qty: 8, safety_stock: 20, warehouse: 'Main Store', stock_value: 24_000 },
+    ];
+  }
+  if (method.includes('warehouse_summary')) {
+    return [
+      { warehouse_name: 'Main Store', name: 'Main Store', item_count: 48, total_value: 8_450_000 },
+      { warehouse_name: 'Tile Warehouse', name: 'Tile Warehouse', item_count: 22, total_value: 4_200_000 },
+      { warehouse_name: 'Pipe Yard', name: 'Pipe Yard', item_count: 15, total_value: 2_800_000 },
+      { warehouse_name: 'Paint Storage', name: 'Paint Storage', item_count: 18, total_value: 3_000_000 },
+    ];
+  }
+  if (method.includes('top_items')) {
+    return [
+      { item_name: 'Deformed Rebar 16mm', item_code: 'STL-RB-16', total_revenue: 4_500_000 },
+      { item_name: 'Portland Cement 50kg', item_code: 'CMT-PC-50', total_revenue: 3_200_000 },
+      { item_name: 'Corrugated Iron Sheet', item_code: 'STL-CI-28', total_revenue: 2_800_000 },
+      { item_name: 'Ceramic Floor Tile 40x40', item_code: 'TIL-CF-40', total_revenue: 2_100_000 },
+      { item_name: 'PVC Pipe 4" x 6m', item_code: 'PIP-PV-4', total_revenue: 1_600_000 },
+      { item_name: 'Exterior Wall Paint 20L', item_code: 'PNT-EW-20', total_revenue: 980_000 },
+    ];
+  }
+  if (method.includes('sales_trend')) {
+    return [
+      { month: 'Oct', revenue: 2_100_000 },
+      { month: 'Nov', revenue: 2_450_000 },
+      { month: 'Dec', revenue: 1_900_000 },
+      { month: 'Jan', revenue: 2_800_000 },
+      { month: 'Feb', revenue: 3_100_000 },
+      { month: 'Mar', revenue: 3_250_000 },
+    ];
+  }
+  if (method.includes('top_customers')) {
+    return [
+      { customer_name: 'Sunshine Construction', total_revenue: 5_200_000 },
+      { customer_name: 'Nile Building PLC', total_revenue: 3_800_000 },
+      { customer_name: 'Abyssinia Developers', total_revenue: 2_900_000 },
+      { customer_name: 'Meskel Construction', total_revenue: 2_100_000 },
+      { customer_name: 'Addis Real Estate', total_revenue: 1_450_000 },
+    ];
+  }
+  return {};
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getDevMockList(doctype: string): any[] {
+  if (doctype === 'Purchase Order') {
+    return [
+      { name: 'PUR-ORD-2026-001', supplier_name: 'Shanghai Steel Co.', transaction_date: '2026-02-15', grand_total: 3_200_000, status: 'To Receive and Bill', schedule_date: '2026-03-20', per_received: 0 },
+      { name: 'PUR-ORD-2026-002', supplier_name: 'Istanbul Cement Ltd.', transaction_date: '2026-02-20', grand_total: 1_800_000, status: 'To Receive and Bill', schedule_date: '2026-03-15', per_received: 30 },
+      { name: 'PUR-ORD-2026-003', supplier_name: 'Dubai Tiles Trading', transaction_date: '2026-01-28', grand_total: 2_400_000, status: 'Completed', schedule_date: '2026-02-28', per_received: 100 },
+      { name: 'PUR-ORD-2026-004', supplier_name: 'Guangzhou Paint Factory', transaction_date: '2026-03-01', grand_total: 950_000, status: 'Draft', schedule_date: '2026-04-10', per_received: 0 },
+      { name: 'PUR-ORD-2026-005', supplier_name: 'Ankara Pipe Industries', transaction_date: '2026-02-10', grand_total: 1_350_000, status: 'Overdue', schedule_date: '2026-02-25', per_received: 0 },
+    ];
+  }
+  if (doctype === 'Sales Order') {
+    return [
+      { name: 'SAL-ORD-2026-001', customer_name: 'Sunshine Construction', transaction_date: '2026-03-01', grand_total: 1_450_000, status: 'To Deliver and Bill', delivery_date: '2026-03-10', per_delivered: 60 },
+      { name: 'SAL-ORD-2026-002', customer_name: 'Nile Building PLC', transaction_date: '2026-02-28', grand_total: 2_100_000, status: 'To Deliver and Bill', delivery_date: '2026-03-08', per_delivered: 0 },
+      { name: 'SAL-ORD-2026-003', customer_name: 'Abyssinia Developers', transaction_date: '2026-02-25', grand_total: 890_000, status: 'Completed', delivery_date: '2026-03-01', per_delivered: 100 },
+      { name: 'SAL-ORD-2026-004', customer_name: 'Meskel Construction', transaction_date: '2026-03-05', grand_total: 1_680_000, status: 'Draft', delivery_date: '2026-03-15', per_delivered: 0 },
+    ];
+  }
+  if (doctype === 'Sales Invoice') {
+    return [
+      { name: 'SINV-2026-001', customer_name: 'Sunshine Construction', posting_date: '2026-03-05', due_date: '2026-04-05', grand_total: 1_200_000, outstanding_amount: 1_200_000, status: 'Unpaid' },
+      { name: 'SINV-2026-002', customer_name: 'Nile Building PLC', posting_date: '2026-02-20', due_date: '2026-03-20', grand_total: 850_000, outstanding_amount: 0, status: 'Paid' },
+      { name: 'SINV-2026-003', customer_name: 'Abyssinia Developers', posting_date: '2026-01-15', due_date: '2026-02-15', grand_total: 450_000, outstanding_amount: 450_000, status: 'Overdue' },
+      { name: 'SINV-2026-004', customer_name: 'Meskel Construction', posting_date: '2026-03-07', due_date: '2026-03-07', grand_total: 2_100_000, outstanding_amount: 1_000_000, status: 'Partly Paid' },
+    ];
+  }
+  if (doctype === 'Import Shipment') {
+    return [
+      { name: 'SHP-2026-001', shipment_title: 'Steel Rebar Shipment', origin_country: 'China', eta: '2026-03-18', status: 'In Transit', total_landed_cost: 4_200_000 },
+      { name: 'SHP-2026-002', shipment_title: 'Cement Bulk Order', origin_country: 'Turkey', eta: '2026-03-12', status: 'In Transit', total_landed_cost: 2_800_000 },
+      { name: 'SHP-2026-003', shipment_title: 'Tile Collection Q1', origin_country: 'UAE', eta: '2026-03-25', status: 'Ordered', total_landed_cost: 1_600_000 },
+      { name: 'SHP-2026-004', shipment_title: 'Paint & Accessories', origin_country: 'China', eta: '2026-04-05', status: 'Ordered', total_landed_cost: 950_000 },
+    ];
+  }
+  if (doctype === 'Customer') {
+    return [
+      { name: 'Sunshine Construction', customer_name: 'Sunshine Construction', customer_group: 'Commercial', territory: 'Ethiopia', credit_limit: 15_000_000, customer_type: 'Company', disabled: 0 },
+      { name: 'Nile Building PLC', customer_name: 'Nile Building PLC', customer_group: 'Government', territory: 'Ethiopia', credit_limit: 25_000_000, customer_type: 'Company', disabled: 0 },
+      { name: 'Abyssinia Developers', customer_name: 'Abyssinia Developers', customer_group: 'Commercial', territory: 'Ethiopia', credit_limit: 5_000_000, customer_type: 'Company', disabled: 0 },
+      { name: 'Meskel Construction', customer_name: 'Meskel Construction', customer_group: 'Commercial', territory: 'Ethiopia', credit_limit: 10_000_000, customer_type: 'Company', disabled: 0 },
+    ];
+  }
+  if (doctype === 'Supplier') {
+    return [
+      { name: 'SUP-001', supplier_name: 'Shanghai Steel Co.', supplier_group: 'Raw Material', country: 'China', supplier_type: 'Company' },
+      { name: 'SUP-002', supplier_name: 'Istanbul Cement Ltd.', supplier_group: 'Raw Material', country: 'Turkey', supplier_type: 'Company' },
+      { name: 'SUP-003', supplier_name: 'Dubai Tiles Trading', supplier_group: 'Distributor', country: 'UAE', supplier_type: 'Company' },
+      { name: 'SUP-004', supplier_name: 'Guangzhou Paint Factory', supplier_group: 'Hardware', country: 'China', supplier_type: 'Company' },
+      { name: 'SUP-005', supplier_name: 'Ankara Pipe Industries', supplier_group: 'Hardware', country: 'Turkey', supplier_type: 'Company' },
+    ];
+  }
+  if (doctype === 'Warehouse') {
+    return [
+      { name: 'Main Store', warehouse_name: 'Main Store', warehouse_type: 'Transit', is_group: 0, company: 'Import Wholesale PLC' },
+      { name: 'Tile Warehouse', warehouse_name: 'Tile Warehouse', warehouse_type: 'Store', is_group: 0, company: 'Import Wholesale PLC' },
+      { name: 'Pipe Yard', warehouse_name: 'Pipe Yard', warehouse_type: 'Store', is_group: 0, company: 'Import Wholesale PLC' },
+      { name: 'Paint Storage', warehouse_name: 'Paint Storage', warehouse_type: 'Transit', is_group: 0, company: 'Import Wholesale PLC' },
+    ];
+  }
+  return [];
 }

@@ -1,13 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect width="64" height="64" rx="14" fill="#E67E22"/>
+  <rect width="64" height="64" rx="14" fill="#2563EB"/>
   <g transform="translate(10, 10)">
-    <!-- Building/warehouse icon -->
     <rect x="4" y="18" width="36" height="24" rx="2" fill="white" opacity="0.95"/>
     <polygon points="22,4 4,18 40,18" fill="white" opacity="0.9"/>
-    <rect x="10" y="26" width="8" height="8" rx="1" fill="#E67E22" opacity="0.8"/>
-    <rect x="26" y="26" width="8" height="8" rx="1" fill="#E67E22" opacity="0.8"/>
-    <rect x="17" y="30" width="10" height="12" rx="1" fill="#D35400" opacity="0.9"/>
-    <!-- Arrow (import) -->
+    <rect x="10" y="26" width="8" height="8" rx="1" fill="#2563EB" opacity="0.8"/>
+    <rect x="26" y="26" width="8" height="8" rx="1" fill="#2563EB" opacity="0.8"/>
+    <rect x="17" y="30" width="10" height="12" rx="1" fill="#1D4ED8" opacity="0.9"/>
     <path d="M32 8 L38 8 L38 2 L44 10 L38 18 L38 12 L32 12 Z" fill="white" opacity="0.85"/>
   </g>
 </svg>

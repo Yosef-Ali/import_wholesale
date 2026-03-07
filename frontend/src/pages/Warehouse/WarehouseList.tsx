@@ -1,5 +1,10 @@
+import { useMemo, useState } from 'react';
 import { useWarehouses, useWarehouseSummary } from '../../api/hooks/useWarehouse';
-import { Warehouse as WarehouseIcon, Package, DollarSign } from 'lucide-react';
+import { Warehouse as WarehouseIcon, Plus, Search, Filter } from 'lucide-react';
+import { PageHeader } from '../../components/ui/PageHeader';
+import { fmtETBCompact } from '../../utils/format';
+import NewWarehouseDrawer from './NewWarehouseDrawer';
+import WarehouseDetailDrawer from './WarehouseDetailDrawer';
 
 interface WarehouseSummary {
   warehouse: string;
@@ -8,135 +13,144 @@ interface WarehouseSummary {
   total_value: number;
 }
 
-function fmtCompact(v: number) {
-  if (v >= 1_000_000) return `ETB ${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000)     return `ETB ${(v / 1_000).toFixed(0)}K`;
-  return `ETB ${new Intl.NumberFormat('en-ET', { maximumFractionDigits: 0 }).format(v)}`;
-}
-
 export default function WarehouseList() {
   const { data: warehouses, isLoading: whLoading } = useWarehouses();
   const { data: summary } = useWarehouseSummary() as { data: WarehouseSummary[] | undefined };
 
-  const getSummary = (name: string) => summary?.find((s) => s.warehouse === name);
+  const [isNewOpen, setIsNewOpen] = useState(false);
+  const [selectedWarehouse, setSelectedWarehouse] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const summaryMap = useMemo(
+    () => Object.fromEntries((summary || []).map((s) => [s.warehouse, s])),
+    [summary],
+  );
+
+  const filteredWarehouses = useMemo(() => {
+    if (!warehouses) return [];
+    if (!searchQuery.trim()) return warehouses;
+    const q = searchQuery.toLowerCase();
+    return warehouses.filter(w => 
+      w.name.toLowerCase().includes(q) || 
+      w.warehouse_name.toLowerCase().includes(q)
+    );
+  }, [warehouses, searchQuery]);
 
   return (
-    <div style={{ maxWidth: '1160px' }}>
-      <div style={{ marginBottom: '1.75rem' }}>
-        <h1 style={{
-          fontFamily: 'var(--font-display)',
-          fontStyle: 'italic',
-          fontVariationSettings: '"opsz" 36, "wght" 700',
-          fontSize: '1.875rem',
-          color: 'var(--ink)',
-          letterSpacing: '-0.03em',
-          margin: '0 0 0.2rem',
-          lineHeight: 1.1,
-        }}>Warehouse</h1>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--muted)', margin: 0 }}>
-          Stock locations and inventory overview
-        </p>
+    <div className="flex flex-col h-full bg-[var(--background)]">
+      {/* Header Area */}
+      <div className="flex-none px-8 pt-8 pb-4">
+        <div className="flex items-start justify-between">
+          <PageHeader title="Warehouse" subtitle="Stock locations and inventory overview" />
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsNewOpen(true)}
+              className="flex items-center gap-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full px-4 py-2 font-primary text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity"
+            >
+              <Plus size={14} /> New Warehouse
+            </button>
+          </div>
+        </div>
+
+        {/* Toolbar */}
+        <div className="flex items-center justify-between mt-6">
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
+              <input 
+                type="text" 
+                placeholder="Search warehouses..." 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-9 pr-4 py-1.5 bg-[var(--card)] border border-[var(--border)] rounded-full text-sm font-secondary focus:outline-none focus:border-[var(--primary)] w-64 transition-colors"
+              />
+            </div>
+            <button className="flex items-center gap-2 px-3 py-1.5 bg-[var(--card)] border border-[var(--border)] rounded-full text-sm font-secondary text-[var(--foreground)] hover:bg-[var(--secondary)] transition-colors">
+              <Filter size={14} /> Filter
+            </button>
+          </div>
+        </div>
       </div>
 
-      {whLoading ? (
-        <div style={{ textAlign: 'center', padding: '3rem 0', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--muted)' }}>
-          Loading warehouses…
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.875rem' }}>
-          {(warehouses || []).map((wh) => {
-            const s = getSummary(wh.name);
-            return (
-              <div
-                key={wh.name}
-                style={{
-                  background: 'var(--card)',
-                  borderRadius: '0.75rem',
-                  border: '1px solid var(--border)',
-                  padding: '1.375rem 1.5rem',
-                  cursor: 'pointer',
-                  transition: 'box-shadow 0.18s, transform 0.18s',
-                  boxShadow: '0 1px 2px rgb(0 0 0 / 0.04)',
-                }}
-                onClick={() => window.open(`http://localhost:8081/app/warehouse/${encodeURIComponent(wh.name)}`, '_blank')}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 24px rgb(0 0 0 / 0.08)';
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 2px rgb(0 0 0 / 0.04)';
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                }}
-              >
-                {/* Warehouse name row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.125rem' }}>
-                  <div style={{
-                    width: '2.25rem', height: '2.25rem',
-                    borderRadius: '0.5rem',
-                    background: 'rgb(232 82 26 / 0.08)',
-                    border: '1px solid rgb(232 82 26 / 0.15)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
-                  }}>
-                    <WarehouseIcon size={16} color="var(--accent)" strokeWidth={1.75} />
-                  </div>
-                  <div>
-                    <div style={{
-                      fontFamily: 'var(--font-body)',
-                      fontWeight: 600,
-                      fontSize: '0.875rem',
-                      color: 'var(--ink)',
-                      lineHeight: 1.3,
-                    }}>{wh.warehouse_name}</div>
-                    <div style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.62rem',
-                      color: 'var(--muted)',
-                      marginTop: '0.1rem',
-                    }}>{wh.name}</div>
-                  </div>
-                </div>
-
-                {/* Stats row */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Package size={13} color="var(--muted)" strokeWidth={1.75} />
-                    <div>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Items</div>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 500, fontSize: '1rem', color: 'var(--ink)', letterSpacing: '-0.02em' }}>{s?.item_count ?? 0}</div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <DollarSign size={13} color="var(--muted)" strokeWidth={1.75} />
-                    <div>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Value</div>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 500, fontSize: '0.85rem', color: 'var(--ink)', letterSpacing: '-0.01em' }}>
-                        {s?.total_value ? fmtCompact(s.total_value) : 'ETB 0'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {!warehouses?.length && (
-            <div style={{
-              gridColumn: '1 / -1',
-              textAlign: 'center',
-              padding: '3rem',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.8rem',
-              color: 'var(--muted)',
-              background: 'var(--card)',
-              borderRadius: '0.75rem',
-              border: '1px solid var(--border)',
-            }}>
-              No warehouses yet. Set up warehouses in ERPNext.
+      {/* Table Area */}
+      <div className="flex-1 px-8 pb-8 min-h-0">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl h-full flex flex-col overflow-hidden shadow-sm">
+          {whLoading ? (
+            <div className="flex flex-col items-center justify-center h-full text-[var(--muted-foreground)] gap-3 bg-[var(--background)]/50 backdrop-blur-sm">
+              <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <div className="overflow-auto flex-1 h-full">
+              <table className="w-full text-left border-collapse">
+                <thead className="sticky top-0 z-10 bg-[var(--background)]">
+                  <tr className="border-b border-[var(--border)] h-10">
+                    <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary w-10"></th>
+                    <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary">Warehouse Name</th>
+                    <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary">Company</th>
+                    <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary">Type</th>
+                    <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary text-right">Items</th>
+                    <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary text-right">Total Value</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border)]">
+                  {filteredWarehouses.map((wh) => {
+                    const s = summaryMap[wh.name];
+                    return (
+                      <tr 
+                        key={wh.name} 
+                        onClick={() => setSelectedWarehouse(wh.name)}
+                        className="group hover:bg-[var(--secondary)] cursor-pointer transition-colors"
+                      >
+                        <td className="px-4 py-3">
+                          <div className="w-10 h-10 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center">
+                            <WarehouseIcon size={18} />
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-col">
+                            <span className="font-primary text-[0.9375rem] font-semibold text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors">{wh.warehouse_name}</span>
+                            <span className="font-secondary text-xs text-[var(--muted-foreground)] mt-0.5">{wh.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="font-secondary text-sm text-[var(--foreground)]">{wh.company}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`font-secondary text-xs font-medium px-2 py-0.5 rounded-full ${
+                            wh.warehouse_type === 'Transit' ? 'bg-amber-500/10 text-amber-600' :
+                            wh.warehouse_type === 'Store' ? 'bg-emerald-500/10 text-emerald-600' :
+                            'bg-blue-500/10 text-blue-600'
+                          }`}>
+                            {wh.warehouse_type || 'Unknown'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="font-mono text-sm text-[var(--foreground)]">{s?.item_count ?? 0}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="font-mono text-sm font-medium text-[var(--foreground)]">
+                            {s?.total_value ? fmtETBCompact(s.total_value) : 'ETB 0'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {!filteredWarehouses.length && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-8 text-center text-sm font-secondary text-[var(--muted-foreground)]">
+                        No warehouses found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
-      )}
+      </div>
+
+      {isNewOpen && <NewWarehouseDrawer onClose={() => setIsNewOpen(false)} />}
+      {selectedWarehouse && <WarehouseDetailDrawer editName={selectedWarehouse} onClose={() => setSelectedWarehouse(null)} />}
     </div>
   );
 }

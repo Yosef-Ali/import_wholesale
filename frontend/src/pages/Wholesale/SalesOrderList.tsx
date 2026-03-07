@@ -1,90 +1,287 @@
-import { useSalesOrders } from '../../api/hooks/useOrders';
-import DataTable from '../../components/DataTable/DataTable';
-import type { SalesOrder } from '../../api/types';
+import { useState, useMemo } from 'react';
+import { 
+  ShoppingCart, Search, Filter, Plus, FileDown, 
+  FileText, Calendar as CalendarIcon, Clock, MoveRight
+} from 'lucide-react';
+import { useSalesOrders, useSalesInvoices } from '../../api/hooks/useOrders';
+import { fmtETB, fmtETBCompact } from '../../utils/format';
+import StatCard from '../../components/ui/StatCard';
+import NewSalesOrderDrawer from './NewSalesOrderDrawer';
+import NewSalesInvoiceDrawer from './NewSalesInvoiceDrawer';
+import SalesOrderDetailDrawer from './SalesOrderDetailDrawer';
+import SalesInvoiceDetailDrawer from './SalesInvoiceDetailDrawer';
 
-const statusStyle: Record<string, { bg: string; color: string }> = {
-  'To Deliver and Bill': { bg: 'rgb(234 179 8 / 0.1)',  color: '#B45309' },
-  'To Deliver':          { bg: 'rgb(59 130 246 / 0.1)',  color: '#1D4ED8' },
-  'To Bill':             { bg: 'rgb(139 92 246 / 0.1)',  color: '#6D28D9' },
-  Completed:             { bg: 'rgb(22 163 74 / 0.1)',   color: '#15803D' },
-  Cancelled:             { bg: 'rgb(220 38 38 / 0.1)',   color: '#B91C1C' },
-};
+// Status Badges
+function SOBadge({ status }: { status: string }) {
+  let bg = 'bg-[var(--secondary)]';
+  let text = 'text-[var(--muted-foreground)]';
+  
+  if (!!status?.match(/To Deliver and Bill|To Deliver|To Bill/i)) { bg = 'bg-amber-500/10'; text = 'text-amber-500'; }
+  if (!!status?.match(/Completed|Closed/i)) { bg = 'bg-[var(--color-success)]/10'; text = 'text-[var(--color-success-foreground)]'; }
+  if (!!status?.match(/Draft/i)) { bg = 'bg-[var(--secondary)]'; text = 'text-[var(--muted-foreground)]'; }
+  if (!!status?.match(/Overdue/i)) { bg = 'bg-[var(--color-destructive)]/10'; text = 'text-[var(--color-destructive)]'; }
 
-function Badge({ status }: { status: string }) {
-  const s = statusStyle[status] || { bg: 'rgb(113 113 122 / 0.1)', color: '#52525B' };
   return (
-    <span style={{
-      display: 'inline-block',
-      padding: '0.2rem 0.55rem',
-      borderRadius: '100px',
-      fontFamily: 'var(--font-mono)',
-      fontSize: '0.65rem',
-      fontWeight: 500,
-      background: s.bg,
-      color: s.color,
-      letterSpacing: '0.02em',
-    }}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-secondary font-bold uppercase tracking-wider ${bg} ${text}`}>
       {status}
     </span>
   );
 }
 
-const fmtETB = (v: number) =>
-  new Intl.NumberFormat('en-ET', { style: 'currency', currency: 'ETB', maximumFractionDigits: 0 }).format(v);
-
-export default function SalesOrderList() {
-  const { data: orders, isLoading } = useSalesOrders();
-
-  const columns = [
-    { key: 'name'             as const, label: 'SO #' },
-    { key: 'customer_name'    as const, label: 'Customer' },
-    { key: 'transaction_date' as const, label: 'Date' },
-    { key: 'delivery_date'    as const, label: 'Delivery' },
-    {
-      key: 'grand_total' as const,
-      label: 'Total (ETB)',
-      render: (v: SalesOrder[keyof SalesOrder]) =>
-        typeof v === 'number' ? (
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>{fmtETB(v)}</span>
-        ) : '-',
-    },
-    {
-      key: 'status' as const,
-      label: 'Status',
-      render: (v: SalesOrder[keyof SalesOrder]) => <Badge status={String(v)} />,
-    },
-  ];
+function InvoiceBadge({ status }: { status: string }) {
+  let bg = 'bg-[var(--secondary)]';
+  let text = 'text-[var(--muted-foreground)]';
+  
+  if (!!status?.match(/Unpaid/i)) { bg = 'bg-amber-500/10'; text = 'text-amber-500'; }
+  if (!!status?.match(/Paid/i)) { bg = 'bg-[var(--color-success)]/10'; text = 'text-[var(--color-success-foreground)]'; }
+  if (!!status?.match(/Overdue/i)) { bg = 'bg-[var(--color-destructive)]/10'; text = 'text-[var(--color-destructive)]'; }
+  if (!!status?.match(/Draft/i)) { bg = 'bg-[var(--secondary)]'; text = 'text-[var(--muted-foreground)]'; }
 
   return (
-    <div style={{ maxWidth: '1160px' }}>
-      <div style={{ marginBottom: '1.75rem' }}>
-        <h1 style={{
-          fontFamily: 'var(--font-display)',
-          fontStyle: 'italic',
-          fontVariationSettings: '"opsz" 36, "wght" 700',
-          fontSize: '1.875rem',
-          color: 'var(--ink)',
-          letterSpacing: '-0.03em',
-          margin: '0 0 0.2rem',
-          lineHeight: 1.1,
-        }}>Wholesale Sales</h1>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--muted)', margin: 0 }}>
-          Sales orders and customer orders
-        </p>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-secondary font-bold uppercase tracking-wider ${bg} ${text}`}>
+      {status}
+    </span>
+  );
+}
+
+export default function SalesOrderList() {
+  const { data: orders = [], isLoading: ordersLoading } = useSalesOrders();
+  const { data: invoices = [], isLoading: invoicesLoading } = useSalesInvoices();
+  
+  const [activeTab, setActiveTab] = useState<'invoices'|'orders'>('invoices');
+  const [search, setSearch] = useState('');
+  
+  // Drawer States
+  const [isNewSODrawerOpen, setIsNewSODrawerOpen] = useState(false);
+  const [isNewSIDrawerOpen, setIsNewSIDrawerOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
+
+  // KPIs
+  const unpaidInvoices = invoices.filter((i: any) => i.status === 'Unpaid' || i.status === 'Partly Paid').reduce((acc: number, i: any) => acc + (i.outstanding_amount || 0), 0);
+  const overdueCount = invoices.filter((i: any) => i.status === 'Overdue').length;
+  const activeSOs = orders.filter(o => o.status !== 'Completed' && o.status !== 'Closed' && o.status !== 'Draft').length;
+  const totalSales = invoices.filter((i: any) => i.status !== 'Draft' && i.status !== 'Cancelled').reduce((acc: number, i: any) => acc + (i.grand_total || 0), 0);
+
+  // Filtering
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter((i: any) => 
+      i.name.toLowerCase().includes(search.toLowerCase()) ||
+      i.customer_name?.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [invoices, search]);
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter(o => 
+      o.name.toLowerCase().includes(search.toLowerCase()) ||
+      o.customer_name?.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [orders, search]);
+
+  return (
+    <div className="flex flex-col gap-0">
+      
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-6 pt-6 mb-0 shrink-0">
+        <div>
+          <h1 className="font-secondary text-2xl font-bold text-[var(--foreground)] m-0">Wholesale Sales</h1>
+          <p className="font-secondary text-[0.8125rem] text-[var(--muted-foreground)] mt-1 mb-0">Manage customer orders and sales invoices</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 bg-[var(--secondary)] text-[var(--foreground)] rounded-full px-4 py-2 font-secondary text-sm font-medium border-none cursor-pointer hover:bg-[var(--border)] transition-colors">
+            <FileDown size={14} /> Export
+          </button>
+          <button 
+            onClick={() => activeTab === 'invoices' ? setIsNewSIDrawerOpen(true) : setIsNewSODrawerOpen(true)}
+            className="flex items-center gap-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full px-4 py-2 font-primary text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity"
+          >
+            <Plus size={14} /> {activeTab === 'invoices' ? 'New Invoice' : 'New Order'}
+          </button>
+        </div>
       </div>
 
-      {isLoading ? (
-        <div style={{ textAlign: 'center', padding: '3rem 0', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--muted)' }}>
-          Loading…
+      {/* ── KPIs ── */}
+      <div className="grid grid-cols-4 gap-4 px-6 py-4 shrink-0">
+        <StatCard title="Unpaid Invoices" value={fmtETBCompact(unpaidInvoices)} change="Outstanding balance" delay="0.04s" bars={[24, 16, 8, 20]} />
+        <StatCard title="Overdue Invoices" value={overdueCount.toString()} change="Requires follow-up" delay="0.08s" bars={[8, 12, 16, 28]} />
+        <StatCard title="Active Orders" value={activeSOs.toString()} change="In progress" delay="0.12s" bars={[16, 24, 20, 12]} />
+        <StatCard title="Total Sales" value={fmtETBCompact(totalSales)} change="All time invoiced" delay="0.16s" bars={[12, 20, 24, 32]} />
+      </div>
+
+      {/* ── Tabs & Toolbar ── */}
+      <div className="flex items-center justify-between px-6 border-y border-[var(--border)] bg-[var(--background)] shrink-0 gap-8 h-12">
+        <div className="flex items-center h-full">
+          <button 
+            onClick={() => setActiveTab('invoices')}
+            className={`px-4 py-3 h-full font-secondary text-sm font-medium transition-colors border-b-2 bg-transparent cursor-pointer ${activeTab === 'invoices' ? 'border-[var(--primary)] text-[var(--primary)]' : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}`}
+          >
+            Sales Invoices
+          </button>
+          <button 
+            onClick={() => setActiveTab('orders')}
+            className={`px-4 py-3 h-full font-secondary text-sm font-medium transition-colors border-b-2 bg-transparent cursor-pointer ${activeTab === 'orders' ? 'border-[var(--primary)] text-[var(--primary)]' : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}`}
+          >
+            Sales Orders
+          </button>
         </div>
-      ) : (
-        <DataTable
-          data={(orders || []) as (SalesOrder & Record<string, unknown>)[]}
-          columns={columns}
-          onRowClick={(row) => window.open(`http://localhost:8081/app/sales-order/${row.name}`, '_blank')}
-          emptyMessage="No sales orders yet. Create orders from ERPNext."
-        />
-      )}
+
+        <div className="flex items-center gap-3">
+          <div className="relative w-72">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
+            <input 
+              type="text" 
+              placeholder={`Search ${activeTab === 'invoices' ? 'invoices...' : 'orders...'}`}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-1.5 bg-[var(--card)] border border-[var(--border)] rounded-full text-xs font-secondary text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+            />
+          </div>
+          <button className="flex items-center gap-2 bg-[var(--secondary)] text-[var(--foreground)] rounded-full px-4 py-1.5 font-secondary text-xs font-medium border-none cursor-pointer hover:bg-[var(--border)] transition-colors">
+            <Filter size={14} /> Filter
+          </button>
+        </div>
+      </div>
+
+      {/* ── Main Content Container ── */}
+      <div className="flex flex-col flex-1 px-6 pb-6 relative h-full">
+        <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] overflow-hidden flex flex-col flex-1 shadow-sm mt-4">
+          {(activeTab === 'invoices' ? invoicesLoading : ordersLoading) && (
+            <div className="absolute inset-0 bg-[#00000020] backdrop-blur-sm z-10 flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+          
+          <div className="overflow-auto flex-1 h-full">
+            <table className="w-full text-left border-collapse">
+              <thead className="sticky top-0 z-10 bg-[var(--background)]">
+                <tr className="border-b border-[var(--border)] h-10">
+                  {activeTab === 'invoices' ? (
+                    <>
+                      <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary w-10"></th>
+                      <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary">Invoice Info</th>
+                      <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary">Customer</th>
+                      <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary">Timeline</th>
+                      <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary text-right">Amount (ETB)</th>
+                      <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary">Status</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary w-10"></th>
+                      <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary">Order Info</th>
+                      <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary">Customer</th>
+                      <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary">Timeline</th>
+                      <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary text-right">Total (ETB)</th>
+                      <th className="px-4 py-2 text-[0.6875rem] font-medium text-[var(--muted-foreground)] uppercase tracking-wider font-primary">Status</th>
+                    </>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {activeTab === 'invoices' && filteredInvoices.map((i: any) => (
+                  <tr 
+                    key={i.name} 
+                    onClick={() => setSelectedInvoice(i.name)}
+                    className="group hover:bg-[var(--secondary)] cursor-pointer transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                        <FileText size={18} />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col">
+                        <span className="font-primary text-[0.9375rem] font-semibold text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors">{i.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="font-secondary text-sm text-[var(--foreground)]">{i.customer_name || i.customer}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col">
+                        <span className="font-secondary text-sm text-[var(--foreground)] flex items-center gap-1">
+                          <CalendarIcon size={12} className="text-[var(--muted-foreground)]"/> {i.posting_date || 'N/A'}
+                        </span>
+                        <span className="font-secondary text-xs text-amber-500 flex items-center gap-1 mt-0.5">
+                          <Clock size={12}/> Due: {i.due_date || 'N/A'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex flex-col items-end">
+                        <span className="font-mono text-sm font-medium text-[var(--foreground)]">
+                          {fmtETB(i.grand_total || 0)}
+                        </span>
+                        {i.outstanding_amount > 0 && (
+                          <span className="font-mono text-xs text-amber-500 mt-1 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                            Bal: {fmtETB(i.outstanding_amount)}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <InvoiceBadge status={i.status || 'Draft'} />
+                    </td>
+                  </tr>
+                ))}
+                
+                {activeTab === 'orders' && filteredOrders.map((o: any) => (
+                  <tr 
+                    key={o.name}
+                    onClick={() => setSelectedOrder(o.name)}
+                    className="group hover:bg-[var(--secondary)] cursor-pointer transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="w-10 h-10 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center">
+                        <ShoppingCart size={18} />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col">
+                        <span className="font-primary text-[0.9375rem] font-semibold text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors">{o.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="font-secondary text-sm text-[var(--foreground)]">{o.customer_name || o.customer}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col">
+                        <span className="font-secondary text-sm text-[var(--foreground)] flex items-center gap-1">
+                          <CalendarIcon size={12} className="text-[var(--muted-foreground)]"/> {o.transaction_date || 'N/A'}
+                        </span>
+                        <span className="font-secondary text-xs text-[var(--muted-foreground)] flex items-center gap-1 mt-0.5">
+                          <MoveRight size={12}/> Del: {o.delivery_date || 'N/A'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="font-mono text-xs bg-[var(--secondary)] px-2 py-1 rounded text-[var(--foreground)] inline-block">
+                        {fmtETB(o.grand_total || 0)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <SOBadge status={o.status || 'Draft'} />
+                    </td>
+                  </tr>
+                ))}
+
+                {((activeTab === 'invoices' && filteredInvoices.length === 0) || (activeTab === 'orders' && filteredOrders.length === 0)) && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-12 text-center text-sm font-secondary text-[var(--muted-foreground)]">
+                      No records found matching your criteria.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      {/* Drawers */}
+      {isNewSODrawerOpen && <NewSalesOrderDrawer onClose={() => setIsNewSODrawerOpen(false)} />}
+      {isNewSIDrawerOpen && <NewSalesInvoiceDrawer onClose={() => setIsNewSIDrawerOpen(false)} />}
+      {selectedOrder && <SalesOrderDetailDrawer editName={selectedOrder} onClose={() => setSelectedOrder(null)} />}
+      {selectedInvoice && <SalesInvoiceDetailDrawer editName={selectedInvoice} onClose={() => setSelectedInvoice(null)} />}
     </div>
   );
 }

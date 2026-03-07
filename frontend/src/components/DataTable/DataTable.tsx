@@ -53,9 +53,9 @@ export default function DataTable<T extends Record<string, unknown>>({
         border: '1px solid var(--border)',
         padding: '3rem',
         textAlign: 'center',
-        fontFamily: 'var(--font-mono)',
-        fontSize: '0.8rem',
-        color: 'var(--muted)',
+        fontFamily: 'var(--font-sans)',
+        fontSize: '0.875rem',
+        color: 'var(--text-muted)',
         boxShadow: '0 1px 2px rgb(0 0 0 / 0.04)',
       }}>
         {emptyMessage}
@@ -74,19 +74,19 @@ export default function DataTable<T extends Record<string, unknown>>({
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ borderBottom: '1px solid var(--border)', background: '#FAFAF8' }}>
+            <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--border-subtle)' }}>
               {columns.map((col) => (
                 <th
                   key={col.key}
                   style={{
                     padding: '0.625rem 1rem',
                     textAlign: 'left',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '0.65rem',
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: '0.72rem',
                     fontWeight: 600,
-                    color: 'var(--muted)',
+                    color: 'var(--text-secondary)',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.07em',
+                    letterSpacing: '0.06em',
                     cursor: col.sortable !== false ? 'pointer' : 'default',
                     userSelect: 'none',
                     whiteSpace: 'nowrap',
@@ -116,7 +116,7 @@ export default function DataTable<T extends Record<string, unknown>>({
                   transition: 'background 0.1s',
                 }}
                 onMouseEnter={(e) => {
-                  if (onRowClick) (e.currentTarget as HTMLElement).style.background = 'rgb(232 82 26 / 0.03)';
+                  if (onRowClick) (e.currentTarget as HTMLElement).style.background = 'var(--border-subtle)';
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.background = 'transparent';
@@ -127,9 +127,9 @@ export default function DataTable<T extends Record<string, unknown>>({
                     key={col.key}
                     style={{
                       padding: '0.75rem 1rem',
-                      fontFamily: 'var(--font-body)',
-                      fontSize: '0.84rem',
-                      color: 'var(--ink)',
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: '0.875rem',
+                      color: 'var(--text)',
                     }}
                   >
                     {col.render ? col.render(row[col.key], row) : String(row[col.key] ?? '')}

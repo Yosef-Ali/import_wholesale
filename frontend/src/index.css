@@ -1,85 +1,136 @@
 @import "tailwindcss";
 
-/* ─────────────────────────────────────────
-   PRECISION COMMERCE — Design System
-   Fraunces / Instrument Sans / JetBrains Mono
-───────────────────────────────────────── */
-
 :root {
-  /* Brand */
-  --accent:       #E8521A;
-  --accent-dim:   #BF4114;
-  --accent-glow:  rgb(232 82 26 / 0.15);
-
-  /* Text */
-  --ink:          #111110;
-  --ink-2:        #3C3B38;
-  --muted:        #888580;
-
-  /* Surfaces */
-  --bg:           #F2F0EB;
-  --card:         #FFFFFF;
-  --border:       #E2DED7;
-
-  /* Sidebar */
-  --sidebar:      #09090B;
-  --sidebar-2:    #0F1014;
-  --sidebar-border: #1C1C1E;
-  --sidebar-muted: #38383A;
-  --sidebar-text:  #A1A1AA;
-  --sidebar-active: #FAFAFA;
-
-  /* Fonts */
-  --font-display: 'Fraunces', serif;
-  --font-body:    'Instrument Sans', sans-serif;
-  --font-mono:    'JetBrains Mono', monospace;
+  --accent: #F2F3F0;
+  --accent-foreground: #111111;
+  --background: #F2F3F0;
+  --black: #000000;
+  --border: #CBCCC9;
+  --card: #FFFFFF;
+  --card-foreground: #111111;
+  --color-error: #E5DCDA;
+  --color-error-foreground: #8C1C00;
+  --color-info: #DFDFE6;
+  --color-info-foreground: #000066;
+  --color-success: #DFE6E1;
+  --color-success-foreground: #004D1A;
+  --color-warning: #E9E3D8;
+  --color-warning-foreground: #804200;
+  --destructive: #D93C15;
+  --foreground: #111111;
+  --input: #CBCCC9;
+  --muted: #F2F3F0;
+  --muted-foreground: #666666;
+  --popover: #FFFFFF;
+  --popover-foreground: #111111;
+  --primary: #FF8400;
+  --primary-foreground: #111111;
+  --radius-m: 16px;
+  --radius-none: 0px;
+  --radius-pill: 999px;
+  --ring: #666666;
+  --secondary: #E7E8E5;
+  --secondary-foreground: #111111;
+  --sidebar: #E7E8E5;
+  --sidebar-accent: #CBCCC9;
+  --sidebar-accent-foreground: #18181b;
+  --sidebar-border: #CBCCC9;
+  --sidebar-foreground: #666666;
+  --sidebar-primary: #18181b;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-ring: #71717a;
+  --white: #FFFFFF;
 }
 
-/* ── Reset ── */
-*, *::before, *::after { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: var(--font-body);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg);
-  color: var(--ink);
+.dark {
+  --accent: #111111;
+  --accent-foreground: #F2F3F0;
+  --background: #111111;
+  --border: #2E2E2E;
+  --card: #1A1A1A;
+  --card-foreground: #FFFFFF;
+  --color-error: #24100B;
+  --color-error-foreground: #FF5C33;
+  --color-info: #222229;
+  --color-info-foreground: #B2B2FF;
+  --color-success: #222924;
+  --color-success-foreground: #B6FFCE;
+  --color-warning: #291C0F;
+  --color-warning-foreground: #FF8400;
+  --destructive: #FF5C33;
+  --foreground: #FFFFFF;
+  --input: #2E2E2E;
+  --muted: #2E2E2E;
+  --muted-foreground: #B8B9B6;
+  --popover: #1A1A1A;
+  --popover-foreground: #FFFFFF;
+  --primary: #FF8400;
+  --primary-foreground: #111111;
+  --ring: #666666;
+  --secondary: #2E2E2E;
+  --secondary-foreground: #FFFFFF;
+  --sidebar: #18181b;
+  --sidebar-accent: #2a2a30;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #ffffff1a;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #18181b;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-ring: #71717a;
 }
 
-/* ── Form primitives ── */
+@layer base {
+  html, body {
+    height: 100%;
+    margin: 0;
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .font-primary {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+  }
+
+  .font-secondary {
+    font-family: "Geist", system-ui, -apple-system, sans-serif;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 .label {
   display: block;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
   margin-bottom: 0.35rem;
-  font-family: var(--font-body);
+  font-family: var(--font-secondary);
 }
 
 .input {
   width: 100%;
-  padding: 0.55rem 0.8rem;
+  padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
-  font-family: var(--font-body);
-  border: 1.5px solid var(--border);
-  border-radius: 0.5rem;
+  font-family: var(--font-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
   background: var(--card);
-  color: var(--ink);
+  color: var(--foreground);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
-/* ── Animations ── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes fadeIn {
@@ -87,15 +138,13 @@ body {
   to   { opacity: 1; }
 }
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.97); }
+  from { opacity: 0; transform: scale(0.98); }
   to   { opacity: 1; transform: scale(1); }
 }
-@keyframes slideRight {
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0); }
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.anim-fade-up   { animation: fadeUp    0.45s cubic-bezier(.22,.68,0,1.2) both; }
-.anim-fade-in   { animation: fadeIn    0.4s  ease both; }
-.anim-scale-in  { animation: scaleIn  0.4s  cubic-bezier(.22,.68,0,1.2) both; }
-.anim-slide-r   { animation: slideRight 0.35s ease both; }
+.anim-fade-up  { animation: fadeUp   0.3s ease both; }
+.anim-fade-in  { animation: fadeIn   0.25s ease both; }
+.anim-scale-in { animation: scaleIn  0.25s ease both; }

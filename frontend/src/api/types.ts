@@ -24,6 +24,8 @@ export interface Customer {
   customer_group: string;
   territory: string;
   credit_limit: number;
+  customer_type?: string;
+  disabled?: number;
 }
 
 export interface PurchaseOrder {
@@ -48,21 +50,42 @@ export interface SalesOrder {
   per_delivered: number;
 }
 
+export interface SalesInvoice {
+  name: string;
+  customer: string;
+  customer_name: string;
+  posting_date: string;
+  due_date: string;
+  grand_total: number;
+  outstanding_amount: number;
+  status: string;
+}
+
 export interface ImportShipment {
   name: string;
-  shipment_title: string;
-  purchase_order: string;
-  supplier: string;
-  supplier_name: string;
-  status: string;
-  shipping_method: string;
-  container_number: string;
-  order_date: string;
-  eta: string;
-  arrival_date: string;
-  origin_country: string;
-  destination_warehouse: string;
-  total_landed_cost: number;
+  shipment_title?: string;
+  purchase_order?: string;
+  supplier?: string;
+  supplier_name?: string;
+  status?: string;
+  shipping_method?: string;
+  container_number?: string;
+  order_date?: string;
+  ship_date?: string;
+  eta?: string;
+  arrival_date?: string;
+  clearance_date?: string;
+  warehouse_date?: string;
+  origin_country?: string;
+  destination_warehouse?: string;
+  total_landed_cost?: number;
+  fob_cost?: number;
+  freight_cost?: number;
+  insurance_cost?: number;
+  customs_duty?: number;
+  sur_tax?: number;
+  vat?: number;
+  other_charges?: number;
 }
 
 export interface Warehouse {

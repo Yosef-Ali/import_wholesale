@@ -1,160 +1,117 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Package, Ship, ShoppingCart,
-  Warehouse as WarehouseIcon, Users, UserCheck, BarChart3, LogOut,
+  Warehouse as WarehouseIcon, Users, UserCheck, BarChart3, LogOut, BookOpen,
+  ChevronDown, ChevronsUpDown,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 
-const nav = [
-  { to: '/',              icon: LayoutDashboard, label: 'Dashboard'     },
-  { to: '/inventory',     icon: Package,         label: 'Inventory'     },
+const mainNav = [
+  { to: '/',              icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/inventory',     icon: Package,         label: 'Inventory' },
   { to: '/import-orders', icon: Ship,            label: 'Import Orders' },
-  { to: '/wholesale',     icon: ShoppingCart,    label: 'Wholesale'     },
-  { to: '/warehouse',     icon: WarehouseIcon,   label: 'Warehouse'     },
-  { to: '/suppliers',     icon: UserCheck,       label: 'Suppliers'     },
-  { to: '/customers',     icon: Users,           label: 'Customers'     },
-  { to: '/reports',       icon: BarChart3,       label: 'Reports'       },
+  { to: '/wholesale',     icon: ShoppingCart,    label: 'Wholesale' },
+  { to: '/warehouse',     icon: WarehouseIcon,   label: 'Warehouse' },
 ];
 
-export default function Sidebar() {
+const peopleNav = [
+  { to: '/suppliers',  icon: UserCheck, label: 'Suppliers' },
+  { to: '/customers',  icon: Users,     label: 'Customers' },
+];
+
+const analyticsNav = [
+  { to: '/reports', icon: BarChart3, label: 'Reports' },
+];
+
+interface Props { onGuideOpen: () => void }
+
+function SectionTitle({ children }: { children: string }) {
+  return (
+    <div className="font-secondary text-[0.65rem] font-semibold text-[var(--sidebar-foreground)] tracking-widest uppercase px-4 pt-5 pb-1.5">
+      {children}
+    </div>
+  );
+}
+
+function NavItem({ to, icon: Icon, label }: { to: string; icon: typeof LayoutDashboard; label: string }) {
+  return (
+    <NavLink
+      key={to}
+      to={to}
+      end={to === '/'}
+      className={({ isActive }) =>
+        `flex items-center gap-3 px-4 py-2 text-[0.8125rem] font-secondary transition-colors duration-150 ` +
+        (isActive
+          ? `font-medium text-[var(--sidebar-accent-foreground)] bg-[var(--sidebar-accent)] rounded-md`
+          : `font-normal text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] rounded-md`)
+      }
+    >
+      <Icon size={16} strokeWidth={1.75} />
+      {label}
+    </NavLink>
+  );
+}
+
+export default function Sidebar({ onGuideOpen }: Props) {
   const logout = useAuthStore((s) => s.logout);
 
   return (
-    <aside style={{
-      position: 'fixed', left: 0, top: 0,
-      height: '100vh', width: '15rem',
-      background: 'var(--sidebar)',
-      display: 'flex', flexDirection: 'column',
-      borderRight: '1px solid var(--sidebar-border)',
-      zIndex: 40,
-    }}>
+    <aside className="fixed left-0 top-0 h-screen w-[280px] bg-[var(--sidebar)] flex flex-col border-r border-[var(--sidebar-border)] z-40">
 
-      {/* ── Logo ── */}
-      <div style={{
-        padding: '1.25rem 1rem 1.125rem',
-        borderBottom: '1px solid var(--sidebar-border)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <div style={{
-            width: '1.75rem', height: '1.75rem',
-            background: 'var(--accent)',
-            borderRadius: '0.3rem',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'var(--font-display)',
-            fontWeight: 800,
-            fontSize: '0.65rem',
-            color: '#fff',
-            flexShrink: 0,
-            letterSpacing: '0.02em',
-          }}>BS</div>
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 p-4 border-b border-[var(--sidebar-border)]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[var(--primary)] rounded-full flex items-center justify-center shrink-0">
+            <span className="font-primary font-bold text-xs text-[var(--primary-foreground)]">BS</span>
+          </div>
           <div>
-            <div style={{
-              fontFamily: 'var(--font-body)',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-              color: '#FAFAFA',
-              letterSpacing: '-0.01em',
-              lineHeight: 1.2,
-            }}>
-              Build<span style={{ color: 'var(--accent)' }}>Supply</span>
-            </div>
-            <div style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.55rem',
-              color: 'var(--sidebar-muted)',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}>Pro</div>
+            <div className="font-secondary text-[0.65rem] text-[var(--muted-foreground)]">Import & Wholesale</div>
+            <div className="font-secondary text-sm font-semibold text-[var(--sidebar-accent-foreground)]">BuildSupply Pro</div>
           </div>
         </div>
+        <ChevronsUpDown size={18} className="text-[var(--muted-foreground)] shrink-0" />
       </div>
 
-      {/* ── Navigation ── */}
-      <nav style={{ flex: 1, padding: '0.75rem 0.625rem', overflowY: 'auto' }}>
-        <div style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: '0.55rem',
-          color: 'var(--sidebar-muted)',
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          padding: '0 0.5rem 0.625rem',
-        }}>
-          Menu
-        </div>
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-4">
+        <SectionTitle>Operations</SectionTitle>
+        {mainNav.map((item) => <NavItem key={item.to} {...item} />)}
 
-        {nav.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/'}
-            style={({ isActive }) => ({
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.625rem',
-              padding: '0.45rem 0.75rem',
-              borderRadius: '0.375rem',
-              marginBottom: '0.0625rem',
-              fontSize: '0.83rem',
-              fontFamily: 'var(--font-body)',
-              fontWeight: isActive ? 500 : 400,
-              color: isActive ? 'var(--sidebar-active)' : 'var(--sidebar-text)',
-              background: isActive ? 'rgb(255 255 255 / 0.05)' : 'transparent',
-              borderLeft: `2px solid ${isActive ? 'var(--accent)' : 'transparent'}`,
-              textDecoration: 'none',
-              transition: 'color 0.12s, background 0.12s, border-color 0.12s',
-            })}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLAnchorElement;
-              if (!el.getAttribute('aria-current')) {
-                el.style.color = '#D4D4D8';
-                el.style.background = 'rgb(255 255 255 / 0.04)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLAnchorElement;
-              if (!el.getAttribute('aria-current')) {
-                el.style.color = 'var(--sidebar-text)';
-                el.style.background = 'transparent';
-              }
-            }}
-          >
-            <Icon size={14} strokeWidth={1.75} />
-            {label}
-          </NavLink>
-        ))}
+        <SectionTitle>People</SectionTitle>
+        {peopleNav.map((item) => <NavItem key={item.to} {...item} />)}
+
+        <SectionTitle>Analytics</SectionTitle>
+        {analyticsNav.map((item) => <NavItem key={item.to} {...item} />)}
       </nav>
 
-      {/* ── Sign out ── */}
-      <div style={{ padding: '0.75rem 0.625rem', borderTop: '1px solid var(--sidebar-border)' }}>
+      {/* Footer */}
+      <div className="p-3 border-t border-[var(--sidebar-border)]">
+        <button
+          onClick={onGuideOpen}
+          className="flex items-center gap-2.5 w-full p-2 rounded-md text-sm font-secondary text-[var(--sidebar-foreground)] bg-transparent border-none cursor-pointer transition-colors duration-150 mb-0.5 hover:text-[var(--primary)] hover:bg-[var(--sidebar-accent)]"
+        >
+          <BookOpen size={15} strokeWidth={1.75} />
+          Guide
+        </button>
         <button
           onClick={logout}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.625rem',
-            width: '100%',
-            padding: '0.45rem 0.75rem',
-            borderRadius: '0.375rem',
-            fontSize: '0.83rem',
-            fontFamily: 'var(--font-body)',
-            color: 'var(--sidebar-muted)',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'color 0.12s, background 0.12s',
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.color = 'var(--accent)';
-            (e.currentTarget as HTMLElement).style.background = 'rgb(232 82 26 / 0.08)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.color = 'var(--sidebar-muted)';
-            (e.currentTarget as HTMLElement).style.background = 'transparent';
-          }}
+          className="flex items-center gap-2.5 w-full p-2 rounded-md text-sm font-secondary text-[var(--sidebar-foreground)] bg-transparent border-none cursor-pointer transition-colors duration-150 hover:text-red-500 hover:bg-red-500/5"
         >
-          <LogOut size={14} strokeWidth={1.75} />
+          <LogOut size={15} strokeWidth={1.75} />
           Sign Out
         </button>
+      </div>
+
+      {/* User Profile */}
+      <div className="flex items-center gap-3 p-4 border-t border-[var(--sidebar-border)]">
+        <div className="w-9 h-9 bg-[var(--secondary)] rounded-full flex items-center justify-center shrink-0">
+          <span className="font-secondary text-xs font-medium text-[var(--foreground)]">SP</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="font-secondary text-sm font-medium text-[var(--sidebar-accent-foreground)] truncate">Salung Prastyo</div>
+          <div className="font-secondary text-xs text-[var(--muted-foreground)]">Pro Plan</div>
+        </div>
+        <ChevronDown size={18} className="text-[var(--muted-foreground)] shrink-0" />
       </div>
     </aside>
   );
