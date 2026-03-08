@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSuppliers } from '../../api/hooks/useSuppliers';
-import { PageHeader } from '../../components/ui/PageHeader';
 import { Truck, Plus, Search, Filter } from 'lucide-react';
+import StatCard from '../../components/ui/StatCard';
 import NewSupplierDrawer from './NewSupplierDrawer';
 import SupplierDetailDrawer from './SupplierDetailDrawer';
 
@@ -11,6 +11,20 @@ export default function Suppliers() {
   const [isNewOpen, setIsNewOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const totalSuppliers = suppliers?.length ?? 0;
+  const uniqueCountries = useMemo(
+    () => new Set((suppliers || []).map(s => s.country).filter(Boolean)).size,
+    [suppliers],
+  );
+  const uniqueGroups = useMemo(
+    () => new Set((suppliers || []).map(s => s.supplier_group).filter(Boolean)).size,
+    [suppliers],
+  );
+  const uniqueTypes = useMemo(
+    () => new Set((suppliers || []).map(s => s.supplier_type).filter(Boolean)).size,
+    [suppliers],
+  );
 
   const filteredSuppliers = useMemo(() => {
     if (!suppliers) return [];
@@ -25,11 +39,11 @@ export default function Suppliers() {
   return (
     <div className="flex flex-col h-full bg-[var(--background)]">
       {/* Header Area */}
-      <div className="flex-none px-8 pt-8 pb-4">
-        <div className="flex items-start justify-between">
-          <PageHeader title="Suppliers" subtitle="International material suppliers" />
+      <div className="flex-none px-6 pt-6 pb-0">
+        <div className="flex items-center justify-between">
+          <h1 className="font-secondary text-2xl font-bold text-[var(--foreground)] m-0">Suppliers</h1>
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setIsNewOpen(true)}
               className="flex items-center gap-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full px-4 py-2 font-primary text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity"
             >
@@ -37,15 +51,24 @@ export default function Suppliers() {
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Toolbar */}
-        <div className="flex items-center justify-between mt-6">
+      {/* KPI Grid */}
+      <div className="grid grid-cols-4 gap-4 px-6 py-4">
+        <StatCard title="Total Suppliers" value={totalSuppliers} change="registered" delay="0.04s" bars={[12, 20, 16, 24]} />
+        <StatCard title="Supplier Types" value={uniqueTypes} change="company types" delay="0.08s" bars={[20, 16, 24, 18]} />
+        <StatCard title="Countries" value={uniqueCountries} change="sourcing regions" delay="0.12s" bars={[8, 16, 12, 20]} />
+        <StatCard title="Supplier Groups" value={uniqueGroups} change="categories" delay="0.16s" bars={[16, 12, 20, 16]} />
+      </div>
+
+      {/* Table Header */}
+      <div className="flex-none px-6 pb-3">
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
-              <input 
-                type="text" 
-                placeholder="Search suppliers..." 
+              <input
+                type="text"
+                placeholder="Search suppliers..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-9 pr-4 py-1.5 bg-[var(--card)] border border-[var(--border)] rounded-full text-sm font-secondary focus:outline-none focus:border-[var(--primary)] w-64 transition-colors"
@@ -56,10 +79,9 @@ export default function Suppliers() {
             </button>
           </div>
         </div>
-      </div>
 
       {/* Table Area */}
-      <div className="flex-1 px-8 pb-8 min-h-0">
+      <div className="flex-1 px-6 pb-6 min-h-0">
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl h-full flex flex-col overflow-hidden shadow-sm">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full text-[var(--muted-foreground)] gap-3 bg-[var(--background)]/50 backdrop-blur-sm">

@@ -12,36 +12,24 @@ import SalesOrderDetailDrawer from './SalesOrderDetailDrawer';
 import SalesInvoiceDetailDrawer from './SalesInvoiceDetailDrawer';
 
 // Status Badges
-function SOBadge({ status }: { status: string }) {
-  let bg = 'bg-[var(--secondary)]';
-  let text = 'text-[var(--muted-foreground)]';
-  
-  if (!!status?.match(/To Deliver and Bill|To Deliver|To Bill/i)) { bg = 'bg-amber-500/10'; text = 'text-amber-500'; }
-  if (!!status?.match(/Completed|Closed/i)) { bg = 'bg-[var(--color-success)]/10'; text = 'text-[var(--color-success-foreground)]'; }
-  if (!!status?.match(/Draft/i)) { bg = 'bg-[var(--secondary)]'; text = 'text-[var(--muted-foreground)]'; }
-  if (!!status?.match(/Overdue/i)) { bg = 'bg-[var(--color-destructive)]/10'; text = 'text-[var(--color-destructive)]'; }
+function StatusBadge({ status, bg = 'bg-[var(--secondary)]', text = 'text-[var(--muted-foreground)]' }: { status: string; bg?: string; text?: string }) {
+  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-secondary font-bold uppercase tracking-wider ${bg} ${text}`}>{status}</span>;
+}
 
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-secondary font-bold uppercase tracking-wider ${bg} ${text}`}>
-      {status}
-    </span>
-  );
+function SOBadge({ status }: { status: string }) {
+  let bg = 'bg-[var(--secondary)]', text = 'text-[var(--muted-foreground)]';
+  if (status?.match(/To Deliver and Bill|To Deliver|To Bill/i)) { bg = 'bg-amber-500/10'; text = 'text-amber-500'; }
+  if (status?.match(/Completed|Closed/i)) { bg = 'bg-[var(--color-success)]/10'; text = 'text-[var(--color-success-foreground)]'; }
+  if (status?.match(/Overdue/i)) { bg = 'bg-[var(--color-destructive)]/10'; text = 'text-[var(--color-destructive)]'; }
+  return <StatusBadge status={status} bg={bg} text={text} />;
 }
 
 function InvoiceBadge({ status }: { status: string }) {
-  let bg = 'bg-[var(--secondary)]';
-  let text = 'text-[var(--muted-foreground)]';
-  
-  if (!!status?.match(/Unpaid/i)) { bg = 'bg-amber-500/10'; text = 'text-amber-500'; }
-  if (!!status?.match(/Paid/i)) { bg = 'bg-[var(--color-success)]/10'; text = 'text-[var(--color-success-foreground)]'; }
-  if (!!status?.match(/Overdue/i)) { bg = 'bg-[var(--color-destructive)]/10'; text = 'text-[var(--color-destructive)]'; }
-  if (!!status?.match(/Draft/i)) { bg = 'bg-[var(--secondary)]'; text = 'text-[var(--muted-foreground)]'; }
-
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-secondary font-bold uppercase tracking-wider ${bg} ${text}`}>
-      {status}
-    </span>
-  );
+  let bg = 'bg-[var(--secondary)]', text = 'text-[var(--muted-foreground)]';
+  if (status?.match(/Unpaid/i)) { bg = 'bg-amber-500/10'; text = 'text-amber-500'; }
+  if (status?.match(/Paid/i)) { bg = 'bg-[var(--color-success)]/10'; text = 'text-[var(--color-success-foreground)]'; }
+  if (status?.match(/Overdue/i)) { bg = 'bg-[var(--color-destructive)]/10'; text = 'text-[var(--color-destructive)]'; }
+  return <StatusBadge status={status} bg={bg} text={text} />;
 }
 
 export default function SalesOrderList() {
@@ -58,10 +46,10 @@ export default function SalesOrderList() {
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
 
   // KPIs
-  const unpaidInvoices = invoices.filter((i: any) => i.status === 'Unpaid' || i.status === 'Partly Paid').reduce((acc: number, i: any) => acc + (i.outstanding_amount || 0), 0);
-  const overdueCount = invoices.filter((i: any) => i.status === 'Overdue').length;
-  const activeSOs = orders.filter(o => o.status !== 'Completed' && o.status !== 'Closed' && o.status !== 'Draft').length;
-  const totalSales = invoices.filter((i: any) => i.status !== 'Draft' && i.status !== 'Cancelled').reduce((acc: number, i: any) => acc + (i.grand_total || 0), 0);
+  const unpaidInvoices = useMemo(() => invoices.filter((i: any) => i.status === 'Unpaid' || i.status === 'Partly Paid').reduce((acc: number, i: any) => acc + (i.outstanding_amount || 0), 0), [invoices]);
+  const overdueCount = useMemo(() => invoices.filter((i: any) => i.status === 'Overdue').length, [invoices]);
+  const activeSOs = useMemo(() => orders.filter(o => o.status !== 'Completed' && o.status !== 'Closed' && o.status !== 'Draft').length, [orders]);
+  const totalSales = useMemo(() => invoices.filter((i: any) => i.status !== 'Draft' && i.status !== 'Cancelled').reduce((acc: number, i: any) => acc + (i.grand_total || 0), 0), [invoices]);
 
   // Filtering
   const filteredInvoices = useMemo(() => {
@@ -184,7 +172,7 @@ export default function SalesOrderList() {
                     className="group hover:bg-[var(--secondary)] cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3">
-                      <div className="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center">
                         <FileText size={18} />
                       </div>
                     </td>

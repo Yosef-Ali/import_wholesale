@@ -296,7 +296,7 @@ export default function ItemList() {
                       <div className="w-10 flex justify-center shrink-0">
                         <button
                           className="p-1 rounded bg-transparent border-none cursor-pointer text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-                          onClick={(e) => { e.stopPropagation(); window.open(`http://localhost:8081/app/item/${item.name}`, '_blank'); }}
+                          onClick={(e) => { e.stopPropagation(); window.open(`${window.location.origin}/app/item/${item.name}`, '_blank'); }}
                           title="Open in ERPNext"
                         >
                           <MoreHorizontal size={14} />

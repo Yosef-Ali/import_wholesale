@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useWarehouses, useWarehouseSummary } from '../../api/hooks/useWarehouse';
 import { Warehouse as WarehouseIcon, Plus, Search, Filter } from 'lucide-react';
-import { PageHeader } from '../../components/ui/PageHeader';
 import { fmtETBCompact } from '../../utils/format';
+import StatCard from '../../components/ui/StatCard';
 import NewWarehouseDrawer from './NewWarehouseDrawer';
 import WarehouseDetailDrawer from './WarehouseDetailDrawer';
 
@@ -20,6 +20,20 @@ export default function WarehouseList() {
   const [isNewOpen, setIsNewOpen] = useState(false);
   const [selectedWarehouse, setSelectedWarehouse] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const totalWarehouses = warehouses?.length ?? 0;
+  const totalStockValue = useMemo(
+    () => (summary || []).reduce((sum, s) => sum + (s.total_value || 0), 0),
+    [summary],
+  );
+  const totalItems = useMemo(
+    () => (summary || []).reduce((sum, s) => sum + (s.item_count || 0), 0),
+    [summary],
+  );
+  const uniqueTypes = useMemo(
+    () => new Set((warehouses || []).map(w => w.warehouse_type).filter(Boolean)).size,
+    [warehouses],
+  );
 
   const summaryMap = useMemo(
     () => Object.fromEntries((summary || []).map((s) => [s.warehouse, s])),
@@ -39,11 +53,11 @@ export default function WarehouseList() {
   return (
     <div className="flex flex-col h-full bg-[var(--background)]">
       {/* Header Area */}
-      <div className="flex-none px-8 pt-8 pb-4">
-        <div className="flex items-start justify-between">
-          <PageHeader title="Warehouse" subtitle="Stock locations and inventory overview" />
+      <div className="flex-none px-6 pt-6 pb-0">
+        <div className="flex items-center justify-between">
+          <h1 className="font-secondary text-2xl font-bold text-[var(--foreground)] m-0">Warehouse</h1>
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setIsNewOpen(true)}
               className="flex items-center gap-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full px-4 py-2 font-primary text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity"
             >
@@ -51,29 +65,37 @@ export default function WarehouseList() {
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Toolbar */}
-        <div className="flex items-center justify-between mt-6">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
-              <input 
-                type="text" 
-                placeholder="Search warehouses..." 
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-1.5 bg-[var(--card)] border border-[var(--border)] rounded-full text-sm font-secondary focus:outline-none focus:border-[var(--primary)] w-64 transition-colors"
-              />
-            </div>
-            <button className="flex items-center gap-2 px-3 py-1.5 bg-[var(--card)] border border-[var(--border)] rounded-full text-sm font-secondary text-[var(--foreground)] hover:bg-[var(--secondary)] transition-colors">
-              <Filter size={14} /> Filter
-            </button>
+      {/* KPI Grid */}
+      <div className="grid grid-cols-4 gap-4 px-6 py-4">
+        <StatCard title="Total Warehouses" value={totalWarehouses} change="locations" delay="0.04s" bars={[12, 20, 16, 24]} />
+        <StatCard title="Stock Value" value={fmtETBCompact(totalStockValue)} change="total inventory" delay="0.08s" bars={[20, 28, 16, 24]} />
+        <StatCard title="Total Items" value={totalItems} change="units tracked" delay="0.12s" bars={[8, 16, 24, 18]} />
+        <StatCard title="Warehouse Types" value={uniqueTypes} change="storage types" delay="0.16s" bars={[16, 12, 20, 16]} />
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex-none px-6 pb-3">
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
+            <input
+              type="text"
+              placeholder="Search warehouses..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-9 pr-4 py-1.5 bg-[var(--card)] border border-[var(--border)] rounded-full text-sm font-secondary focus:outline-none focus:border-[var(--primary)] w-64 transition-colors"
+            />
           </div>
+          <button className="flex items-center gap-2 px-3 py-1.5 bg-[var(--card)] border border-[var(--border)] rounded-full text-sm font-secondary text-[var(--foreground)] hover:bg-[var(--secondary)] transition-colors">
+            <Filter size={14} /> Filter
+          </button>
         </div>
       </div>
 
       {/* Table Area */}
-      <div className="flex-1 px-8 pb-8 min-h-0">
+      <div className="flex-1 px-6 pb-6 min-h-0">
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl h-full flex flex-col overflow-hidden shadow-sm">
           {whLoading ? (
             <div className="flex flex-col items-center justify-center h-full text-[var(--muted-foreground)] gap-3 bg-[var(--background)]/50 backdrop-blur-sm">

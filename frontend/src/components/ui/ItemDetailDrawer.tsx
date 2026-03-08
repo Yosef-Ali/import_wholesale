@@ -2,22 +2,20 @@ import { useEffect, useState } from 'react';
 import {
   X, Package, ExternalLink, Warehouse, Tag, Scale,
   AlertTriangle, CheckCircle2, RefreshCw, Printer,
-  Edit2, TrendingUp, ShoppingCart, BarChart2, Trash2, Save,
+  Edit2, TrendingUp, ShoppingCart, BarChart2, Trash2, Check, Loader2,
 } from 'lucide-react';
 import { useItemDetail, useItemStock, useUpdateItem, useDeleteItem } from '../../api/hooks/useItems';
 import { fmtETB } from '../../utils/format';
+import { drawerEditClass as inputClass, drawerLabelClass as labelClass } from '../../utils/styles';
+import { toast } from '../../stores/toastStore';
 import type { StockLevel } from '../../api/types';
 
 /* ─── Mini stat block ─── */
 function Stat({ label, value, mono = false, wide = false }: { label: string; value: React.ReactNode; mono?: boolean; wide?: boolean }) {
   return (
-    <div className={`flex flex-col gap-1 ${wide ? 'col-span-2' : ''}`}>
-      <span className="font-primary text-[0.6875rem] font-medium text-[var(--muted-foreground)] tracking-widest uppercase">
-        {label}
-      </span>
-      <span className={`text-base font-bold text-[var(--foreground)] tracking-tight ${mono ? 'font-primary' : 'font-secondary'}`}>
-        {value}
-      </span>
+    <div className={`flex flex-col gap-1 p-3.5 rounded-xl bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)]/30 transition-colors ${wide ? 'col-span-2' : ''}`}>
+      <span className="font-primary text-[0.6rem] font-bold text-[var(--muted-foreground)] uppercase tracking-widest">{label}</span>
+      <span className={`text-[0.9375rem] text-[var(--foreground)] ${mono ? 'font-mono font-semibold' : 'font-primary font-semibold'}`}>{value || '—'}</span>
     </div>
   );
 }
@@ -29,7 +27,6 @@ function StockRow({ sl }: { sl: StockLevel }) {
   const available = qty - reserved;
   const isLow = sl.is_low_stock;
   const isOut = qty <= 0;
-
   const barPct = Math.max(0, Math.min(100, (qty / ((sl as any).safety_stock || 100)) * 100));
 
   return (
@@ -47,12 +44,8 @@ function StockRow({ sl }: { sl: StockLevel }) {
           <span className="font-secondary text-[0.6rem] font-medium px-2 py-0.5 rounded-full bg-[var(--color-success)]/60 text-[var(--color-success-foreground)] whitespace-nowrap">In Stock</span>
         )}
       </div>
-      {/* Stock bar */}
       <div className="w-full h-1.5 bg-[var(--secondary)] rounded-full mb-2">
-        <div
-          className={`h-full rounded-full transition-all ${isOut ? 'bg-red-500' : isLow ? 'bg-amber-500' : 'bg-[var(--primary)]'}`}
-          style={{ width: `${barPct}%` }}
-        />
+        <div className={`h-full rounded-full transition-all ${isOut ? 'bg-red-500' : isLow ? 'bg-amber-500' : 'bg-[var(--primary)]'}`} style={{ width: `${barPct}%` }} />
       </div>
       <div className="flex items-center justify-between text-xs font-primary text-[var(--muted-foreground)]">
         <span>Actual: <strong className="text-[var(--foreground)]">{qty}</strong></span>
@@ -63,16 +56,17 @@ function StockRow({ sl }: { sl: StockLevel }) {
   );
 }
 
-/* ─── Section label ─── */
-function SectionLabel({ children }: { children: React.ReactNode }) {
+/* ─── Section divider ─── */
+function SectionDivider({ children }: { children: React.ReactNode }) {
   return (
-    <div className="font-primary text-[0.6875rem] font-medium text-[var(--muted-foreground)] tracking-widest uppercase mb-4">
-      {children}
+    <div className="flex items-center gap-3 pt-1">
+      <span className="w-[3px] h-4 rounded-full bg-[var(--primary)] shrink-0" />
+      <span className="font-primary text-[0.65rem] font-bold uppercase tracking-widest text-[var(--muted-foreground)]">{children}</span>
+      <span className="flex-1 h-px bg-[var(--border)]" />
     </div>
   );
 }
 
-/* ─── Tab ─── */
 type Tab = 'details' | 'stock' | 'purchasing';
 
 interface Props {
@@ -91,7 +85,6 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<any>>({});
 
-  // Sync form when item loads
   useEffect(() => {
     if (item && !isEditing) {
       setEditForm({
@@ -107,14 +100,13 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
     }
   }, [item, isEditing]);
 
-  // Close on Escape (only if not editing)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !isEditing) onClose();
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [onClose]);
+  }, [onClose, isEditing]);
 
   const stockRows = stockData ?? (stockLevel ? [stockLevel] : []);
   const totalStock = stockRows.reduce((s, r) => s + (r.actual_qty ?? 0), 0);
@@ -158,8 +150,8 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
           const qty = sl.actual_qty ?? 0;
           const res = (sl as any).reserved_qty ?? 0;
           const cls = qty <= 0 ? 'out' : sl.is_low_stock ? 'low' : 'ok';
-          const label = qty <= 0 ? 'Out of Stock' : sl.is_low_stock ? 'Low Stock' : 'In Stock';
-          return `<tr><td>${sl.warehouse}</td><td>${qty}</td><td>${res}</td><td>${qty - res}</td><td><span class="badge ${cls}">${label}</span></td></tr>`;
+          const lbl = qty <= 0 ? 'Out of Stock' : sl.is_low_stock ? 'Low Stock' : 'In Stock';
+          return `<tr><td>${sl.warehouse}</td><td>${qty}</td><td>${res}</td><td>${qty - res}</td><td><span class="badge ${cls}">${lbl}</span></td></tr>`;
         }).join('')}
         <tr style="border-top:2px solid #eee"><td><strong>Total</strong></td><td><strong>${totalStock}</strong></td><td><strong>${totalReserved}</strong></td><td><strong>${totalStock - totalReserved}</strong></td><td></td></tr>
       </table>
@@ -173,149 +165,103 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
   const handleSave = () => {
     if (!itemName) return;
     updateItem.mutate({ name: itemName, data: editForm }, {
-      onSuccess: () => setIsEditing(false)
+      onSuccess: () => { setIsEditing(false); toast.success('Item updated successfully'); },
+      onError: (err: any) => toast.error(err.message || 'Failed to update item'),
     });
   };
 
   const handleDelete = () => {
     if (!itemName) return;
-    if (confirm(`Are you sure you want to delete ${item?.item_name ?? itemName}?`)) {
+    if (confirm(`Delete ${item?.item_name ?? itemName}?`)) {
       deleteItem.mutate(itemName, {
-        onSuccess: () => onClose()
+        onSuccess: () => onClose(),
+        onError: (err: any) => toast.error(err.message || 'Failed to delete item'),
       });
     }
   };
 
+  const TABS = [
+    { id: 'details' as Tab, icon: Package, label: 'Details' },
+    { id: 'stock' as Tab, icon: BarChart2, label: 'Stock' },
+    { id: 'purchasing' as Tab, icon: ShoppingCart, label: 'Purchasing' },
+  ];
+
   return (
     <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 z-40 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" onClick={onClose} />
+      <div className="fixed top-0 right-0 bottom-0 w-[600px] bg-[var(--card)] border-l border-[var(--border)] rounded-l-2xl shadow-2xl z-50 flex flex-col overflow-hidden animate-in slide-in-from-right-10 duration-300">
 
-      {/* Drawer — adjusted width */}
-      <div className="fixed right-0 top-0 h-full w-[500px] bg-[var(--card)] border-l border-[var(--border)] z-50 flex flex-col shadow-2xl">
-
-        {/* ── Header ── */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center">
-              <Package size={18} className="text-[var(--primary)]" />
+        {/* Header */}
+        <div className="px-6 pt-6 pb-5 border-b border-[var(--border)] flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-[var(--primary)] text-[var(--primary-foreground)] flex items-center justify-center shadow-sm shrink-0">
+              <Package size={20} />
             </div>
-            <div>
-              <div className="font-primary text-[0.6875rem] font-medium text-[var(--muted-foreground)] tracking-widest uppercase mb-0.5">Inventory · Item</div>
-              <div className="font-secondary text-sm font-bold text-[var(--foreground)]">
-                {isLoading ? 'Loading…' : (item?.item_name ?? itemName)}
-              </div>
+            <div className="min-w-0">
+              {isLoading ? (
+                <div className="h-5 w-40 bg-[var(--secondary)] rounded animate-pulse mb-1" />
+              ) : (
+                <h2 className="font-primary text-xl font-bold text-[var(--foreground)] leading-tight truncate">{item?.item_name ?? itemName}</h2>
+              )}
+              <p className="font-secondary text-xs text-[var(--muted-foreground)] mt-0.5">{item?.item_code ?? 'Inventory Item'}</p>
             </div>
           </div>
-
-          {/* Action buttons */}
-          <div className="flex items-center gap-1.5">
-            {isEditing ? (
+          <div className="flex items-center gap-1 shrink-0 ml-2">
+            {!isEditing ? (
               <>
-                <button
-                  onClick={() => setIsEditing(false)}
-                  disabled={updateItem.isPending}
-                  className="flex items-center gap-1.5 text-xs font-secondary font-semibold text-[var(--foreground)] bg-[var(--secondary)] px-3 py-1.5 rounded-lg hover:bg-[var(--border)] transition-colors border border-[var(--border)] cursor-pointer"
-                >
-                  Cancel
+                <button onClick={() => { setTab('details'); setIsEditing(true); }} className="p-2 text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/10 rounded-lg transition-colors" title="Edit"><Edit2 size={15} /></button>
+                <button onClick={handleDelete} disabled={deleteItem.isPending || !item} className="p-2 text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-40" title="Delete">
+                  {deleteItem.isPending ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
                 </button>
-                <button
-                  onClick={handleSave}
-                  disabled={updateItem.isPending}
-                  className="flex items-center gap-1.5 text-xs font-secondary font-semibold text-[var(--primary-foreground)] bg-[var(--primary)] px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity cursor-pointer border-none"
-                >
-                  {updateItem.isPending ? <RefreshCw size={13} className="animate-spin" /> : <Save size={13} />}
-                  Save
-                </button>
+                <button onClick={handlePrint} disabled={!item} className="p-2 text-[var(--muted-foreground)] hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors disabled:opacity-40" title="Print"><Printer size={15} /></button>
+                <button onClick={onClose} className="p-2 text-[var(--muted-foreground)] hover:bg-[var(--secondary)] rounded-lg transition-colors ml-1"><X size={16} /></button>
               </>
             ) : (
               <>
-                {/* Delete */}
-                <button
-                  onClick={handleDelete}
-                  disabled={deleteItem.isPending || !item}
-                  className="flex items-center gap-1.5 text-xs font-secondary font-semibold text-red-500 bg-red-500/10 px-3 py-1.5 rounded-lg hover:bg-red-500/20 transition-colors border border-transparent cursor-pointer disabled:opacity-40"
-                  title="Delete Item"
-                >
-                  {deleteItem.isPending ? <RefreshCw size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                </button>
-
-                {/* Print */}
-                <button
-                  onClick={handlePrint}
-                  disabled={!item}
-                  className="flex items-center gap-1.5 text-xs font-secondary font-semibold text-[var(--foreground)] bg-[var(--secondary)] px-3 py-1.5 rounded-lg hover:bg-[var(--border)] transition-colors border border-[var(--border)] cursor-pointer disabled:opacity-40"
-                >
-                  <Printer size={13} />
-                  Print
-                </button>
-
-                {/* Edit inline */}
-                <button
-                  onClick={() => { setTab('details'); setIsEditing(true); }}
-                  className="flex items-center gap-1.5 text-xs font-secondary font-semibold text-[var(--primary-foreground)] bg-[var(--primary)] px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity cursor-pointer border-none"
-                >
-                  <Edit2 size={13} />
-                  Edit
+                <button onClick={() => setIsEditing(false)} className="p-2 text-[var(--muted-foreground)] hover:bg-[var(--secondary)] rounded-lg transition-colors"><X size={16} /></button>
+                <button onClick={handleSave} disabled={updateItem.isPending} className="px-4 py-1.5 bg-[var(--primary)] text-[var(--primary-foreground)] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5 cursor-pointer disabled:opacity-60">
+                  {updateItem.isPending ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Save
                 </button>
               </>
             )}
-
-            {/* Close */}
-            <button
-              onClick={onClose}
-              disabled={isEditing}
-              className="ml-1 p-1.5 rounded-lg bg-transparent border-none cursor-pointer text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)] transition-colors disabled:opacity-40"
-            >
-              <X size={18} />
-            </button>
           </div>
         </div>
 
-        {/* ── Tabs ── */}
-        <div className="flex items-center gap-0 px-5 border-b border-[var(--border)]">
-          {([
-            { id: 'details', icon: Package, label: 'Details' },
-            { id: 'stock',   icon: BarChart2, label: 'Stock' },
-            { id: 'purchasing', icon: ShoppingCart, label: 'Purchasing' },
-          ] as { id: Tab; icon: typeof Package; label: string }[]).map(({ id, icon: Icon, label }) => (
+        {/* Tabs */}
+        <div className="flex items-center px-6 border-b border-[var(--border)] shrink-0">
+          {TABS.map(({ id, icon: Icon, label }) => (
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={`flex items-center gap-1.5 px-4 py-3 text-xs font-secondary font-semibold border-b-2 transition-colors cursor-pointer bg-transparent border-x-0 border-t-0 ${
+              className={`flex items-center gap-1.5 px-4 py-3 text-xs font-secondary font-semibold uppercase tracking-wider border-b-2 transition-colors ${
                 tab === id
                   ? 'border-[var(--primary)] text-[var(--primary)]'
                   : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
               }`}
             >
-              <Icon size={13} />
-              {label}
+              <Icon size={13} /> {label}
             </button>
           ))}
         </div>
 
-        {/* ── Content ── */}
+        {/* Content */}
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="flex items-center justify-center h-full gap-2 text-[var(--muted-foreground)]">
-              <RefreshCw size={16} className="animate-spin" />
-              <span className="font-secondary text-sm">Loading item…</span>
+            <div className="p-6 grid grid-cols-2 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className={`h-16 bg-[var(--secondary)] rounded-xl animate-pulse ${i === 0 ? 'col-span-2' : ''}`} />
+              ))}
             </div>
           ) : item ? (
             <>
-              {/* ── DETAILS TAB ── */}
+              {/* DETAILS TAB */}
               {tab === 'details' && (
                 <>
                   {/* Hero */}
                   <div className="p-5 border-b border-[var(--border)]">
                     <div className="flex items-start gap-4">
                       {item.image ? (
-                        <img
-                          src={item.image as string}
-                          alt=""
-                          className="w-24 h-24 rounded-xl object-cover bg-[var(--secondary)] shrink-0"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                        />
+                        <img src={item.image as string} alt="" className="w-24 h-24 rounded-xl object-cover bg-[var(--secondary)] shrink-0" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                       ) : (
                         <div className="w-24 h-24 rounded-xl bg-[var(--secondary)] flex items-center justify-center shrink-0">
                           <Package size={36} className="text-[var(--muted-foreground)]" />
@@ -323,75 +269,55 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
                       )}
                       <div className="flex-1 min-w-0">
                         {isEditing ? (
-                          <input
-                            type="text"
-                            className="input font-secondary text-xl font-bold mb-1.5"
-                            value={editForm.item_name || ''}
-                            onChange={e => setEditForm(prev => ({ ...prev, item_name: e.target.value }))}
-                          />
+                          <input type="text" className={inputClass + ' font-secondary text-xl font-bold mb-1.5'} value={editForm.item_name || ''} onChange={e => setEditForm(p => ({ ...p, item_name: e.target.value }))} />
                         ) : (
-                          <h2 className="font-secondary text-xl font-bold text-[var(--foreground)] m-0 mb-1.5 leading-tight">
-                            {item.item_name}
-                          </h2>
+                          <h2 className="font-secondary text-xl font-bold text-[var(--foreground)] m-0 mb-1.5 leading-tight">{item.item_name}</h2>
                         )}
                         <div className="flex items-center gap-2 flex-wrap mb-2">
-                          <span className="font-primary text-xs text-[var(--muted-foreground)] bg-[var(--secondary)] px-2 py-0.5 rounded">
-                            {item.item_code}
-                          </span>
-                          <span className={`font-secondary text-xs font-semibold px-2 py-0.5 rounded-full ${
-                            (item as any).disabled
-                              ? 'bg-red-500/10 text-red-500'
-                              : 'bg-[var(--color-success)]/60 text-[var(--color-success-foreground)]'
-                          }`}>
+                          <span className="font-primary text-xs text-[var(--muted-foreground)] bg-[var(--secondary)] px-2 py-0.5 rounded">{item.item_code}</span>
+                          <span className={`font-secondary text-xs font-semibold px-2 py-0.5 rounded-full ${(item as any).disabled ? 'bg-red-500/10 text-red-500' : 'bg-[var(--color-success)]/60 text-[var(--color-success-foreground)]'}`}>
                             {(item as any).disabled ? 'Disabled' : 'Enabled'}
                           </span>
                         </div>
-                        {/* Total stock quick-view */}
                         <div className="flex items-center gap-1.5 text-xs font-secondary text-[var(--muted-foreground)]">
                           <TrendingUp size={12} className={totalStock > 0 ? 'text-[var(--color-success-foreground)]' : 'text-red-400'} />
-                          <span>
-                            Total stock: <strong className="text-[var(--foreground)]">{totalStock} {item.stock_uom}</strong>
-                          </span>
+                          <span>Total stock: <strong className="text-[var(--foreground)]">{totalStock} {item.stock_uom}</strong></span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Stats grid */}
+                  {/* Core Details */}
                   <div className="p-5 border-b border-[var(--border)]">
-                    <SectionLabel>Core Details</SectionLabel>
-                    <div className="grid grid-cols-2 gap-4">
+                    <SectionDivider>Core Details</SectionDivider>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
                       {isEditing ? (
                         <>
-                          <div className="flex flex-col gap-1">
-                            <label className="label">Item Group</label>
-                            <input className="input" value={editForm.item_group || ''} onChange={e => setEditForm(p => ({ ...p, item_group: e.target.value }))} />
+                          <div>
+                            <span className={labelClass}>Item Group</span>
+                            <input className={inputClass} value={editForm.item_group || ''} onChange={e => setEditForm(p => ({ ...p, item_group: e.target.value }))} />
                           </div>
-                          <div className="flex flex-col gap-1">
-                            <label className="label">UOM (Stock)</label>
-                            <input className="input" value={editForm.stock_uom || ''} onChange={e => setEditForm(p => ({ ...p, stock_uom: e.target.value }))} />
+                          <div>
+                            <span className={labelClass}>UOM (Stock)</span>
+                            <input className={inputClass} value={editForm.stock_uom || ''} onChange={e => setEditForm(p => ({ ...p, stock_uom: e.target.value }))} />
                           </div>
-                          <div className="flex flex-col gap-1">
-                            <label className="label">Standard Rate (ETB)</label>
-                            <input type="number" className="input" value={editForm.standard_rate || 0} onChange={e => setEditForm(p => ({ ...p, standard_rate: parseFloat(e.target.value) }))} />
+                          <div>
+                            <span className={labelClass}>Standard Rate (ETB)</span>
+                            <input type="number" className={inputClass} value={editForm.standard_rate || 0} onChange={e => setEditForm(p => ({ ...p, standard_rate: parseFloat(e.target.value) }))} />
                           </div>
-                          <div className="flex flex-col gap-1">
-                            <label className="label">Safety Stock</label>
-                            <input type="number" className="input" value={editForm.safety_stock || 0} onChange={e => setEditForm(p => ({ ...p, safety_stock: parseFloat(e.target.value) }))} />
+                          <div>
+                            <span className={labelClass}>Safety Stock</span>
+                            <input type="number" className={inputClass} value={editForm.safety_stock || 0} onChange={e => setEditForm(p => ({ ...p, safety_stock: parseFloat(e.target.value) }))} />
                           </div>
                         </>
                       ) : (
                         <>
                           <Stat label="Item Group" value={<span className="flex items-center gap-1.5"><Tag size={12} className="text-[var(--muted-foreground)]" />{item.item_group}</span>} />
                           <Stat label="Unit of Measure" value={<span className="flex items-center gap-1.5"><Scale size={12} className="text-[var(--muted-foreground)]" />{item.stock_uom}</span>} />
-                          <Stat label="Maintain Stock" value={
-                            (item as any).is_stock_item
-                              ? <span className="flex items-center gap-1 text-[var(--color-success-foreground)]"><CheckCircle2 size={13} /> Yes</span>
-                              : <span className="flex items-center gap-1 text-[var(--muted-foreground)]"><X size={13} /> No</span>
-                          } />
-                          <Stat label="Standard Rate" mono value={item.standard_rate > 0 ? fmtETB(item.standard_rate) : <span className="text-[var(--muted-foreground)]">—</span>} />
-                          <Stat label="Valuation Rate" mono value={(item as any).valuation_rate ? fmtETB((item as any).valuation_rate) : <span className="text-[var(--muted-foreground)]">—</span>} />
-                          <Stat label="Safety Stock" value={item.safety_stock > 0 ? `${item.safety_stock} ${item.stock_uom}` : <span className="text-[var(--muted-foreground)]">—</span>} />
+                          <Stat label="Maintain Stock" value={(item as any).is_stock_item ? <span className="flex items-center gap-1 text-[var(--color-success-foreground)]"><CheckCircle2 size={13} /> Yes</span> : <span className="flex items-center gap-1 text-[var(--muted-foreground)]"><X size={13} /> No</span>} />
+                          <Stat label="Standard Rate" mono value={item.standard_rate > 0 ? fmtETB(item.standard_rate) : '—'} />
+                          <Stat label="Valuation Rate" mono value={(item as any).valuation_rate ? fmtETB((item as any).valuation_rate) : '—'} />
+                          <Stat label="Safety Stock" value={item.safety_stock > 0 ? `${item.safety_stock} ${item.stock_uom}` : '—'} />
                         </>
                       )}
                     </div>
@@ -400,8 +326,8 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
                   {/* Flags */}
                   {!isEditing && (
                     <div className="px-5 py-4 border-b border-[var(--border)]">
-                      <SectionLabel>Flags</SectionLabel>
-                      <div className="grid grid-cols-3 gap-3">
+                      <SectionDivider>Flags</SectionDivider>
+                      <div className="grid grid-cols-3 gap-3 mt-4">
                         {[
                           { label: 'Has Variants', key: 'has_variants' },
                           { label: 'Fixed Asset', key: 'is_fixed_asset' },
@@ -422,18 +348,15 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
                   {/* Description */}
                   {(item as any).description && !isEditing && (
                     <div className="p-5 border-b border-[var(--border)]">
-                      <SectionLabel>Description</SectionLabel>
-                      <div
-                        className="font-secondary text-sm text-[var(--muted-foreground)] leading-relaxed"
-                        dangerouslySetInnerHTML={{ __html: (item as any).description }}
-                      />
+                      <SectionDivider>Description</SectionDivider>
+                      <div className="font-secondary text-sm text-[var(--muted-foreground)] leading-relaxed mt-4" dangerouslySetInnerHTML={{ __html: (item as any).description }} />
                     </div>
                   )}
 
-                  {/* Over billing/delivery allowances */}
+                  {/* Allowances */}
                   <div className="p-5">
-                    <SectionLabel>Allowances</SectionLabel>
-                    <div className="grid grid-cols-2 gap-4">
+                    <SectionDivider>Allowances</SectionDivider>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
                       <Stat label="Over Delivery Allowance (%)" mono value={(item as any).over_delivery_receipt_allowance ?? '0.000'} />
                       <Stat label="Over Billing Allowance (%)" mono value={(item as any).over_billing_allowance ?? '0.000'} />
                     </div>
@@ -441,10 +364,9 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
                 </>
               )}
 
-              {/* ── STOCK TAB ── */}
+              {/* STOCK TAB */}
               {tab === 'stock' && (
                 <div className="p-5">
-                  {/* Summary cards */}
                   <div className="grid grid-cols-3 gap-3 mb-5">
                     {[
                       { label: 'Total Actual', value: totalStock, uom: item.stock_uom },
@@ -459,37 +381,38 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
                     ))}
                   </div>
 
-                  <SectionLabel>
-                    Stock by Warehouse
-                    {stockLoading && <RefreshCw size={11} className="animate-spin inline-block ml-2 text-[var(--muted-foreground)]" />}
-                  </SectionLabel>
+                  <SectionDivider>
+                    Stock by Warehouse {stockLoading && <RefreshCw size={11} className="animate-spin inline-block ml-2 text-[var(--muted-foreground)]" />}
+                  </SectionDivider>
 
-                  {stockRows.length === 0 ? (
-                    <div className="flex items-center gap-2 py-6 text-[var(--muted-foreground)] justify-center">
-                      <AlertTriangle size={16} />
-                      <span className="font-secondary text-sm">No stock records found</span>
-                    </div>
-                  ) : (
-                    stockRows.map((sl, i) => <StockRow key={i} sl={sl} />)
-                  )}
+                  <div className="mt-4">
+                    {stockRows.length === 0 ? (
+                      <div className="flex items-center gap-2 py-6 text-[var(--muted-foreground)] justify-center">
+                        <AlertTriangle size={16} />
+                        <span className="font-secondary text-sm">No stock records found</span>
+                      </div>
+                    ) : (
+                      stockRows.map((sl, i) => <StockRow key={i} sl={sl} />)
+                    )}
+                  </div>
                 </div>
               )}
 
-              {/* ── PURCHASING TAB ── */}
+              {/* PURCHASING TAB */}
               {tab === 'purchasing' && (
                 <div className="p-5">
-                  <SectionLabel>Purchasing Details</SectionLabel>
-                  <div className="grid grid-cols-2 gap-4 mb-5">
+                  <SectionDivider>Purchasing Details</SectionDivider>
+                  <div className="grid grid-cols-2 gap-4 mt-4 mb-5">
                     <Stat label="Is Purchase Item" value={(item as any).is_purchase_item ? <span className="flex items-center gap-1 text-[var(--color-success-foreground)]"><CheckCircle2 size={13} /> Yes</span> : <span className="text-[var(--muted-foreground)]">No</span>} />
                     <Stat label="Is Sub-contracted" value={(item as any).is_sub_contracted_item ? <span className="flex items-center gap-1 text-[var(--color-success-foreground)]"><CheckCircle2 size={13} /> Yes</span> : <span className="text-[var(--muted-foreground)]">No</span>} />
                     <Stat label="Lead Time (days)" mono value={(item as any).lead_time_days ?? '—'} />
                     <Stat label="Min Order Qty" mono value={(item as any).min_order_qty ?? '—'} />
-                    <Stat label="Last Purchase Rate" mono value={(item as any).last_purchase_rate ? fmtETB((item as any).last_purchase_rate) : <span className="text-[var(--muted-foreground)]">—</span>} />
-                    <Stat label="Country of Origin" value={(item as any).country_of_origin ?? <span className="text-[var(--muted-foreground)]">—</span>} />
+                    <Stat label="Last Purchase Rate" mono value={(item as any).last_purchase_rate ? fmtETB((item as any).last_purchase_rate) : '—'} />
+                    <Stat label="Country of Origin" value={(item as any).country_of_origin ?? '—'} />
                   </div>
 
-                  <SectionLabel>Supplier Info</SectionLabel>
-                  <div className="bg-[var(--secondary)] rounded-xl border border-[var(--border)] p-4">
+                  <SectionDivider>Supplier Info</SectionDivider>
+                  <div className="bg-[var(--secondary)] rounded-xl border border-[var(--border)] p-4 mt-4">
                     {(item as any).supplier_items?.length ? (
                       (item as any).supplier_items.map((s: any, i: number) => (
                         <div key={i} className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0">
@@ -513,35 +436,29 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
               )}
             </>
           ) : (
-            <div className="flex items-center justify-center h-full text-[var(--muted-foreground)] font-secondary text-sm">
-              Item not found
-            </div>
+            <div className="flex items-center justify-center h-full text-sm font-secondary text-[var(--muted-foreground)]">Item not found</div>
           )}
         </div>
 
-        {/* ── Footer ── */}
-        <div className="px-5 py-3.5 border-t border-[var(--border)] flex items-center justify-between bg-[var(--background)]/50">
-          <span className="font-secondary text-[13px] text-[var(--muted-foreground)]">
-            {item ? `Modified ${(item as any).modified?.split(' ')[0] ?? '—'} · Created By ${(item as any).owner ?? '—'}` : ''}
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--background)]/40">
+          <span className="font-secondary text-xs text-[var(--muted-foreground)]">
+            {item ? `Modified ${(item as any).modified?.split(' ')[0] ?? '—'}` : ''}
           </span>
           <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="text-[13px] font-secondary font-medium px-4 py-1.5 rounded-md bg-[#333333] text-white border border-transparent cursor-pointer hover:bg-[#404040] transition-colors"
-            >
+            <button onClick={onClose} className="text-sm font-secondary font-medium px-4 py-2 rounded-lg bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors">
               Close
             </button>
             <a
-              href={`http://localhost:8081/app/item/${itemName}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-[13px] font-secondary font-semibold px-4 py-1.5 rounded-md bg-[#ff8a00] text-black cursor-pointer hover:bg-[#e67a00] transition-colors no-underline flex items-center gap-1.5"
+              href={`${window.location.origin}/app/item/${itemName}`}
+              target="_blank" rel="noreferrer"
+              className="text-sm font-secondary font-semibold px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] cursor-pointer hover:opacity-90 transition-opacity no-underline flex items-center gap-1.5"
             >
-              <ExternalLink size={14} className="opacity-80" />
-              Open in ERPNext
+              <ExternalLink size={13} className="opacity-80" /> Open in ERPNext
             </a>
           </div>
         </div>
+
       </div>
     </>
   );

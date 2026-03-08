@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Search, Bell, MessageSquare, Command, Sparkles } from 'lucide-react';
+import { Search, Bell, Command, Sparkles } from 'lucide-react';
 import Sidebar from './Sidebar';
 import ToastContainer from '../ui/ToastContainer';
 import GuidePanel from '../ui/GuidePanel';
@@ -15,6 +15,7 @@ const breadcrumbMap: Record<string, string> = {
   '/suppliers': 'Suppliers',
   '/customers': 'Customers',
   '/reports': 'Reports',
+  '/users':   'User Management',
 };
 
 export default function AppLayout() {
@@ -46,7 +47,14 @@ export default function AppLayout() {
               </div>
             </div>
             <Bell size={18} className="text-[var(--muted-foreground)] cursor-pointer hover:text-[var(--foreground)] transition-colors" />
-            <MessageSquare size={18} className="text-[var(--muted-foreground)] cursor-pointer hover:text-[var(--foreground)] transition-colors" onClick={() => setChatOpen(true)} />
+            <button
+              onClick={() => setChatOpen(true)}
+              className="flex items-center gap-2 h-8 px-3 rounded-full bg-[var(--primary)]/10 hover:bg-[var(--primary)]/20 border border-[var(--primary)]/20 hover:border-[var(--primary)]/40 transition-all cursor-pointer group"
+              title="Ask AI"
+            >
+              <Sparkles size={14} className="text-[var(--primary)] group-hover:scale-110 transition-transform" />
+              <span className="font-secondary text-xs font-semibold text-[var(--primary)]">Ask AI</span>
+            </button>
             <div className="w-9 h-9 rounded-full bg-[var(--primary)] flex items-center justify-center shrink-0">
               <span className="font-secondary text-xs font-semibold text-[var(--primary-foreground)]">SP</span>
             </div>
@@ -58,34 +66,6 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
-
-      {/* Floating AI chat button */}
-      {!chatOpen && (
-        <button
-          onClick={() => setChatOpen(true)}
-          style={{
-            position: 'fixed', bottom: '1.5rem', right: '1.5rem',
-            width: 52, height: 52,
-            background: 'var(--primary)',
-            border: 'none', borderRadius: '0.75rem',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', zIndex: 100,
-            boxShadow: '0 4px 20px rgba(255,132,0,0.35)',
-            transition: 'transform 0.15s, box-shadow 0.15s',
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.transform = 'scale(1.08)';
-            (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 28px rgba(255,132,0,0.45)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
-            (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(255,132,0,0.35)';
-          }}
-          title="Ask AI"
-        >
-          <Sparkles size={22} color="white" strokeWidth={1.75} />
-        </button>
-      )}
 
       <ToastContainer />
       {guideOpen && <GuidePanel onClose={() => setGuideOpen(false)} />}

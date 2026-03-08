@@ -10,34 +10,23 @@ import NewShipmentDrawer from './NewShipmentDrawer';
 import ShipmentDetailDrawer from './ShipmentDetailDrawer';
 
 // Status Badges
-function ShipmentBadge({ status }: { status: string }) {
-  let bg = 'bg-[var(--secondary)]';
-  let text = 'text-[var(--muted-foreground)]';
-  
-  if (!!status?.match(/Transit|Shipped/i)) { bg = 'bg-blue-500/10'; text = 'text-blue-500'; }
-  if (!!status?.match(/Completed|Cleared|Warehouse/i)) { bg = 'bg-[var(--color-success)]/10'; text = 'text-[var(--color-success-foreground)]'; }
-  if (!!status?.match(/Ordered/i)) { bg = 'bg-amber-500/10'; text = 'text-amber-500'; }
+function StatusBadge({ status, bg = 'bg-[var(--secondary)]', text = 'text-[var(--muted-foreground)]' }: { status: string; bg?: string; text?: string }) {
+  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-secondary font-bold uppercase tracking-wider ${bg} ${text}`}>{status}</span>;
+}
 
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-secondary font-bold uppercase tracking-wider ${bg} ${text}`}>
-      {status}
-    </span>
-  );
+function ShipmentBadge({ status }: { status: string }) {
+  let bg = 'bg-[var(--secondary)]', text = 'text-[var(--muted-foreground)]';
+  if (status?.match(/Transit|Shipped/i)) { bg = 'bg-blue-500/10'; text = 'text-blue-500'; }
+  if (status?.match(/Completed|Cleared|Warehouse/i)) { bg = 'bg-[var(--color-success)]/10'; text = 'text-[var(--color-success-foreground)]'; }
+  if (status?.match(/Ordered/i)) { bg = 'bg-amber-500/10'; text = 'text-amber-500'; }
+  return <StatusBadge status={status} bg={bg} text={text} />;
 }
 
 function POBadge({ status }: { status: string }) {
-  let bg = 'bg-[var(--secondary)]';
-  let text = 'text-[var(--muted-foreground)]';
-  
-  if (status === 'Draft') { bg = 'bg-[var(--secondary)]'; text = 'text-[var(--muted-foreground)]'; }
+  let bg = 'bg-[var(--secondary)]', text = 'text-[var(--muted-foreground)]';
   if (status === 'To Receive and Bill' || status === 'To Receive') { bg = 'bg-amber-500/10'; text = 'text-amber-500'; }
   if (status === 'Completed' || status === 'Closed') { bg = 'bg-[var(--color-success)]/10'; text = 'text-[var(--color-success-foreground)]'; }
-
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-secondary font-bold uppercase tracking-wider ${bg} ${text}`}>
-      {status}
-    </span>
-  );
+  return <StatusBadge status={status} bg={bg} text={text} />;
 }
 
 export default function PurchaseOrderList() {
@@ -52,10 +41,10 @@ export default function PurchaseOrderList() {
   const [selectedShipment, setSelectedShipment] = useState<string | null>(null);
 
   // KPIs
-  const activePOs = orders.filter(o => o.status !== 'Completed' && o.status !== 'Closed' && o.status !== 'Draft').length;
-  const inTransit = shipments.filter(s => s.status?.includes('Transit') || s.status?.includes('Port') || s.status?.includes('Shipped')).length;
-  const totalLanded = shipments.reduce((acc, s) => acc + (s.total_landed_cost || 0), 0);
-  const pendingClearance = shipments.filter(s => s.status?.includes('Pending Clearance') || s.status?.includes('Customs')).length;
+  const activePOs = useMemo(() => orders.filter(o => o.status !== 'Completed' && o.status !== 'Closed' && o.status !== 'Draft').length, [orders]);
+  const inTransit = useMemo(() => shipments.filter(s => s.status?.includes('Transit') || s.status?.includes('Port') || s.status?.includes('Shipped')).length, [shipments]);
+  const totalLanded = useMemo(() => shipments.reduce((acc, s) => acc + (s.total_landed_cost || 0), 0), [shipments]);
+  const pendingClearance = useMemo(() => shipments.filter(s => s.status?.includes('Pending Clearance') || s.status?.includes('Customs')).length, [shipments]);
 
   // Filtering
   const filteredShipments = useMemo(() => {
@@ -223,7 +212,7 @@ export default function PurchaseOrderList() {
                 {activeTab === 'pos' && filteredPOs.map((o) => (
                   <tr 
                     key={o.name}
-                    onClick={() => window.open(`http://localhost:8081/app/purchase-order/${o.name}`, '_blank')}
+                    onClick={() => window.open(`${window.location.origin}/app/purchase-order/${o.name}`, '_blank')}
                     className="group hover:bg-[var(--secondary)] cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3">

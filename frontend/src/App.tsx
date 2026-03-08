@@ -12,6 +12,7 @@ import WarehouseList from './pages/Warehouse/WarehouseList'
 import Suppliers from './pages/Suppliers'
 import Customers from './pages/Customers'
 import Reports from './pages/Reports'
+import Users from './pages/Users'
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -73,6 +74,7 @@ export default function App() {
             <Route path="/suppliers"      element={<Suppliers />} />
             <Route path="/customers"      element={<Customers />} />
             <Route path="/reports"        element={<Reports />} />
+            <Route path="/users"          element={<Users />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

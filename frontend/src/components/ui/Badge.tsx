@@ -1,3 +1,16 @@
+import type { ReactNode } from 'react';
+
+interface StatProps { label: string; value: ReactNode; mono?: boolean }
+
+export function Stat({ label, value, mono = false }: StatProps) {
+  return (
+    <div className="flex flex-col gap-1 p-3.5 rounded-xl bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)]/30 transition-colors">
+      <span className="font-primary text-[0.6rem] font-bold text-[var(--muted-foreground)] uppercase tracking-widest">{label}</span>
+      <span className={`text-[0.9375rem] text-[var(--foreground)] ${mono ? 'font-mono font-semibold' : 'font-primary font-semibold'}`}>{value || '—'}</span>
+    </div>
+  );
+}
+
 interface BadgeStyle { bg: string; color: string }
 
 const STATUS_MAP: Record<string, BadgeStyle> = {

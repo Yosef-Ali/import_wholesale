@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Package, Ship, ShoppingCart,
-  Warehouse as WarehouseIcon, Users, UserCheck, BarChart3, LogOut, BookOpen,
+  Warehouse as WarehouseIcon, Users, UserCheck, UserCog, BarChart3, LogOut, BookOpen,
   ChevronDown, ChevronsUpDown,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
@@ -17,6 +17,7 @@ const mainNav = [
 const peopleNav = [
   { to: '/suppliers',  icon: UserCheck, label: 'Suppliers' },
   { to: '/customers',  icon: Users,     label: 'Customers' },
+  { to: '/users',      icon: UserCog,   label: 'User Management' },
 ];
 
 const analyticsNav = [

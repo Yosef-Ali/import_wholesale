@@ -1,0 +1,4 @@
+/** Shared Tailwind class strings for drawer form inputs */
+export const drawerInputClass = "w-full px-3.5 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-lg font-secondary text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/60 focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/10 transition-colors";
+export const drawerEditClass = "w-full px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-lg font-secondary text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/10 transition-colors";
+export const drawerLabelClass = "font-primary text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted-foreground)] block mb-1.5";
