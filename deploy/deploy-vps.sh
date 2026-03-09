@@ -1,32 +1,43 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────
-# BuildSupply Pro — VPS Deploy Script
-# Usage:  ./deploy/deploy-vps.sh          (deploy all)
-#         ./deploy/deploy-vps.sh react    (react-ui only)
-#         ./deploy/deploy-vps.sh backend  (ERPNext only)
+# BuildSupply Pro — Deploy to VPS
+#
+# Run from ANYWHERE (laptop or VPS):
+#   ./deploy/deploy-vps.sh              (deploy react-ui)
+#   ./deploy/deploy-vps.sh react        (deploy react-ui)
+#   ./deploy/deploy-vps.sh backend      (deploy ERPNext)
+#   ./deploy/deploy-vps.sh all          (deploy everything)
 # ─────────────────────────────────────────────────────────
 set -euo pipefail
 
-PROJECT="buildsupply"
-COMPOSE_DIR="/opt/buildsupply/docker"
-COMPONENT="${1:-all}"
-
-cd /opt/buildsupply
+VPS_HOST="72.62.170.70"
+VPS_USER="root"
+COMPONENT="${1:-react}"
 
 echo "━━━ BuildSupply Deploy ━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Component: $COMPONENT"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# 1. Pull latest code
+# Push local changes first
 echo ""
+echo "==> Pushing to GitHub..."
+git push origin master 2>/dev/null || echo "   (nothing to push)"
+
+# SSH into VPS and deploy
+echo "==> Connecting to VPS ($VPS_HOST)..."
+ssh -o StrictHostKeyChecking=no "$VPS_USER@$VPS_HOST" bash -s "$COMPONENT" <<'REMOTE'
+set -e
+COMPONENT="$1"
+PROJECT="buildsupply"
+
+cd /opt/buildsupply
 echo "==> Pulling latest code..."
 git pull origin master
 
-# 2. Build & restart
-cd "$COMPOSE_DIR"
+cd docker
 
 case "$COMPONENT" in
-  react|react-ui|frontend-ui)
+  react|react-ui|all)
     echo "==> Building React UI..."
     docker compose -p "$PROJECT" build react-ui
     echo "==> Restarting React UI..."
@@ -38,20 +49,12 @@ case "$COMPONENT" in
     echo "==> Restarting backend services..."
     docker compose -p "$PROJECT" up -d --no-deps backend websocket queue-short queue-long scheduler
     ;;
-  all)
-    echo "==> Building all images..."
-    docker compose -p "$PROJECT" build react-ui
-    echo "==> Restarting React UI..."
-    docker compose -p "$PROJECT" up -d --no-deps react-ui
-    ;;
   *)
     echo "Unknown component: $COMPONENT"
-    echo "Usage: $0 [react|backend|all]"
     exit 1
     ;;
 esac
 
-# 3. Health check
 echo ""
 echo "==> Verifying deployment..."
 sleep 3
@@ -65,9 +68,10 @@ fi
 if curl -sf http://localhost:8081 > /dev/null 2>&1; then
   echo "✅ ERPNext is live on port 8081"
 else
-  echo "⚠️  ERPNext health check skipped or unavailable"
+  echo "⚠️  ERPNext health check skipped"
 fi
 
 echo ""
 echo "━━━ Deploy Complete ━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-docker compose -p "$PROJECT" ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" | head -15
+docker compose -p "$PROJECT" ps --format "table {{.Name}}\t{{.Status}}" | head -15
+REMOTE
