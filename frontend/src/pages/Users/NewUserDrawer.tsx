@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { UserCog, X, Loader2, UserPlus, ExternalLink } from 'lucide-react';
 import { useCreateUser, APP_ROLES } from '../../api/hooks/useUsers';
 import { toast } from '../../stores/toastStore';
+import { erpnextUrl } from '../../utils/format';
 import { drawerInputClass as inputClass, drawerLabelClass as labelClass } from '../../utils/styles';
 
 interface Props { onClose: () => void }
@@ -162,7 +163,7 @@ export default function NewUserDrawer({ onClose }: Props) {
         {/* Footer */}
         <div className="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--background)]/40">
           <a
-            href={`${window.location.origin}/app/user/new-user-1`}
+            href={erpnextUrl(`/app/user/new-user-1`)}
             target="_blank" rel="noreferrer"
             className="text-sm font-secondary text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-1.5 transition-colors no-underline"
           >

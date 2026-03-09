@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { login as apiLogin, logout as apiLogout, getLoggedUser, clearCsrfToken } from '../api/client';
 
-// Dev mode: bypass Frappe auth when backend is down
-const DEV_BYPASS = import.meta.env.DEV;
+// Active in local dev OR when VITE_MOCK_MODE=true (e.g. Vercel demo without backend)
+const DEV_BYPASS = import.meta.env.DEV || import.meta.env.VITE_MOCK_MODE === 'true';
 
 interface AuthState {
   user: string | null;

@@ -6,6 +6,7 @@ import StatCard from '../../components/ui/StatCard';
 import TopItemsChart from '../../components/Charts/TopItemsChart';
 import TopCustomersChart from '../../components/Charts/TopCustomersChart';
 import { fmtETBCompact } from '../../utils/format';
+import PageSkeleton from '../../components/ui/PageSkeleton';
 import { useDashboardStats } from '../../api/hooks/useDashboard';
 
 interface TopItem     { item_code: string; item_name: string; total_qty: number; total_amount: number }
@@ -45,11 +46,7 @@ export default function Reports() {
   );
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <span className="font-secondary text-sm text-[var(--muted-foreground)]">Loading…</span>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (

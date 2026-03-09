@@ -2,7 +2,8 @@
  * Frappe REST API client for BuildSupply Pro
  */
 const BASE = '/api';
-const DEV_BYPASS = import.meta.env.DEV;
+// Active in local dev OR when VITE_MOCK_MODE=true (e.g. Vercel demo without backend)
+const DEV_BYPASS = import.meta.env.VITE_MOCK_MODE === 'true';
 
 interface FrappeListParams {
   doctype: string;
@@ -120,8 +121,11 @@ export async function createDoc<T = Record<string, unknown>>(
     return json.data;
   } catch (err) {
     if (DEV_BYPASS) {
-      console.warn(`[DEV] createDoc(${doctype}) failed, returning mocked payload`);
-      return { name: `MOCK-${Date.now()}`, ...data } as unknown as T;
+      console.warn(`[DEV] createDoc(${doctype}) failed, modifying inMemoryStore`);
+      const store = getDevMockList(doctype);
+      const newDoc = { name: `MOCK-${Date.now()}`, ...data };
+      store.push(newDoc);
+      return newDoc as unknown as T;
     }
     throw err;
   }
@@ -147,7 +151,13 @@ export async function updateDoc<T = Record<string, unknown>>(
     return json.data;
   } catch (err) {
     if (DEV_BYPASS) {
-      console.warn(`[DEV] updateDoc(${doctype}, ${name}) failed, returning mocked payload`);
+      console.warn(`[DEV] updateDoc(${doctype}, ${name}) failed, modifying inMemoryStore`);
+      const store = getDevMockList(doctype);
+      const idx = store.findIndex(i => i.name === name);
+      if (idx !== -1) {
+        store[idx] = { ...store[idx], ...data };
+        return store[idx] as unknown as T;
+      }
       return { name, ...data } as unknown as T;
     }
     throw err;
@@ -167,7 +177,10 @@ export async function deleteDoc(doctype: string, name: string) {
     if (!res.ok) throw new Error(`Failed to delete ${doctype}/${name}`);
   } catch (err) {
     if (DEV_BYPASS) {
-      console.warn(`[DEV] deleteDoc(${doctype}, ${name}) failed, ignored in mock mode`);
+      console.warn(`[DEV] deleteDoc(${doctype}, ${name}) failed, modifying inMemoryStore`);
+      const store = getDevMockList(doctype);
+      const idx = store.findIndex(i => i.name === name);
+      if (idx !== -1) store.splice(idx, 1);
       return;
     }
     throw err;
@@ -194,6 +207,41 @@ export async function callMethod<T = unknown>(
     if (DEV_BYPASS) {
       console.warn(`[DEV] callMethod(${method}) failed, returning mock data`);
       return getDevMockData(method, args) as T;
+    }
+    throw err;
+  }
+}
+
+// ── File Upload ──────────────────────────────────────────────────────
+
+export async function uploadFile(
+  file: File,
+  doctype: string,
+  docname: string,
+  fieldname: string = 'image'
+): Promise<string> {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('doctype', doctype);
+    formData.append('docname', docname);
+    formData.append('fieldname', fieldname);
+    formData.append('is_private', '0');
+
+    const res = await fetch(`${BASE}/method/upload_file`, {
+      method: 'POST',
+      headers: { 'X-Frappe-CSRF-Token': await getCsrfToken() },
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!res.ok) throw new Error('File upload failed');
+    const json = await res.json();
+    return json.message.file_url;
+  } catch (err) {
+    if (DEV_BYPASS) {
+      console.warn('[DEV] uploadFile failed, returning fake URL');
+      return URL.createObjectURL(file);
     }
     throw err;
   }
@@ -305,64 +353,107 @@ function getDevMockData(method: string, _args?: Record<string, unknown>): any {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+const inMemoryStore: Record<string, any[]> = {};
+
 function getDevMockList(doctype: string): any[] {
+  if (inMemoryStore[doctype]) return inMemoryStore[doctype];
+
   if (doctype === 'Purchase Order') {
-    return [
+    inMemoryStore[doctype] = [
       { name: 'PUR-ORD-2026-001', supplier_name: 'Shanghai Steel Co.', transaction_date: '2026-02-15', grand_total: 3_200_000, status: 'To Receive and Bill', schedule_date: '2026-03-20', per_received: 0 },
       { name: 'PUR-ORD-2026-002', supplier_name: 'Istanbul Cement Ltd.', transaction_date: '2026-02-20', grand_total: 1_800_000, status: 'To Receive and Bill', schedule_date: '2026-03-15', per_received: 30 },
       { name: 'PUR-ORD-2026-003', supplier_name: 'Dubai Tiles Trading', transaction_date: '2026-01-28', grand_total: 2_400_000, status: 'Completed', schedule_date: '2026-02-28', per_received: 100 },
       { name: 'PUR-ORD-2026-004', supplier_name: 'Guangzhou Paint Factory', transaction_date: '2026-03-01', grand_total: 950_000, status: 'Draft', schedule_date: '2026-04-10', per_received: 0 },
       { name: 'PUR-ORD-2026-005', supplier_name: 'Ankara Pipe Industries', transaction_date: '2026-02-10', grand_total: 1_350_000, status: 'Overdue', schedule_date: '2026-02-25', per_received: 0 },
     ];
+    return inMemoryStore[doctype];
   }
   if (doctype === 'Sales Order') {
-    return [
+    inMemoryStore[doctype] = [
       { name: 'SAL-ORD-2026-001', customer_name: 'Sunshine Construction', transaction_date: '2026-03-01', grand_total: 1_450_000, status: 'To Deliver and Bill', delivery_date: '2026-03-10', per_delivered: 60 },
       { name: 'SAL-ORD-2026-002', customer_name: 'Nile Building PLC', transaction_date: '2026-02-28', grand_total: 2_100_000, status: 'To Deliver and Bill', delivery_date: '2026-03-08', per_delivered: 0 },
       { name: 'SAL-ORD-2026-003', customer_name: 'Abyssinia Developers', transaction_date: '2026-02-25', grand_total: 890_000, status: 'Completed', delivery_date: '2026-03-01', per_delivered: 100 },
       { name: 'SAL-ORD-2026-004', customer_name: 'Meskel Construction', transaction_date: '2026-03-05', grand_total: 1_680_000, status: 'Draft', delivery_date: '2026-03-15', per_delivered: 0 },
     ];
+    return inMemoryStore[doctype];
   }
   if (doctype === 'Sales Invoice') {
-    return [
+    inMemoryStore[doctype] = [
       { name: 'SINV-2026-001', customer_name: 'Sunshine Construction', posting_date: '2026-03-05', due_date: '2026-04-05', grand_total: 1_200_000, outstanding_amount: 1_200_000, status: 'Unpaid' },
       { name: 'SINV-2026-002', customer_name: 'Nile Building PLC', posting_date: '2026-02-20', due_date: '2026-03-20', grand_total: 850_000, outstanding_amount: 0, status: 'Paid' },
       { name: 'SINV-2026-003', customer_name: 'Abyssinia Developers', posting_date: '2026-01-15', due_date: '2026-02-15', grand_total: 450_000, outstanding_amount: 450_000, status: 'Overdue' },
       { name: 'SINV-2026-004', customer_name: 'Meskel Construction', posting_date: '2026-03-07', due_date: '2026-03-07', grand_total: 2_100_000, outstanding_amount: 1_000_000, status: 'Partly Paid' },
     ];
+    return inMemoryStore[doctype];
   }
   if (doctype === 'Import Shipment') {
-    return [
+    inMemoryStore[doctype] = [
       { name: 'SHP-2026-001', shipment_title: 'Steel Rebar Shipment', origin_country: 'China', eta: '2026-03-18', status: 'In Transit', total_landed_cost: 4_200_000 },
       { name: 'SHP-2026-002', shipment_title: 'Cement Bulk Order', origin_country: 'Turkey', eta: '2026-03-12', status: 'In Transit', total_landed_cost: 2_800_000 },
       { name: 'SHP-2026-003', shipment_title: 'Tile Collection Q1', origin_country: 'UAE', eta: '2026-03-25', status: 'Ordered', total_landed_cost: 1_600_000 },
       { name: 'SHP-2026-004', shipment_title: 'Paint & Accessories', origin_country: 'China', eta: '2026-04-05', status: 'Ordered', total_landed_cost: 950_000 },
     ];
+    return inMemoryStore[doctype];
+  }
+  if (doctype === 'Item') {
+    inMemoryStore[doctype] = [
+      { name: 'STL-RB-16', item_code: 'STL-RB-16', item_name: 'Deformed Rebar 16mm', item_group: 'Steel', stock_uom: 'Nos', standard_rate: 1200, safety_stock: 500, image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=400' },
+      { name: 'STL-CI-28', item_code: 'STL-CI-28', item_name: 'Corrugated Iron Sheet', item_group: 'Steel', stock_uom: 'Sheet', standard_rate: 700, safety_stock: 300, image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=400' },
+      { name: 'STL-WE-32', item_code: 'STL-WE-32', item_name: 'Welding Electrode 3.2mm', item_group: 'Steel', stock_uom: 'Kg', standard_rate: 3000, safety_stock: 20, image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=400' },
+      { name: 'STL-AP-4', item_code: 'STL-AP-4', item_name: 'Angle Iron 4" x 6m', item_group: 'Steel', stock_uom: 'Length', standard_rate: 1800, safety_stock: 100, image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=400' },
+      { name: 'CMT-PC-50', item_code: 'CMT-PC-50', item_name: 'Portland Cement 50kg', item_group: 'Cement', stock_uom: 'Bag', standard_rate: 1800, safety_stock: 200, image: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=400' },
+      { name: 'CMT-SC-25', item_code: 'CMT-SC-25', item_name: 'Waterproof Screed 25kg', item_group: 'Cement', stock_uom: 'Bag', standard_rate: 950, safety_stock: 150, image: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=400' },
+      { name: 'TIL-CF-40', item_code: 'TIL-CF-40', item_name: 'Ceramic Floor Tile 40x40', item_group: 'Tiles', stock_uom: 'Sqm', standard_rate: 400, safety_stock: 500, image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=400' },
+      { name: 'PNT-EW-20', item_code: 'PNT-EW-20', item_name: 'Exterior Wall Paint 20L', item_group: 'Paint', stock_uom: 'Can', standard_rate: 6000, safety_stock: 50, image: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=400' },
+      { name: 'PIP-PV-4', item_code: 'PIP-PV-4', item_name: 'PVC Pipe 4" x 6m', item_group: 'Hardware', stock_uom: 'Length', standard_rate: 600, safety_stock: 200, image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=400' },
+      { name: 'HW-BB-M16', item_code: 'HW-BB-M16', item_name: 'Anchor Bolt M16 x 150mm', item_group: 'Hardware', stock_uom: 'Nos', standard_rate: 85, safety_stock: 1000, image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=400' },
+
+    ];
+    return inMemoryStore[doctype];
+  }
+  if (doctype === 'Item Group') {
+    inMemoryStore[doctype] = [
+      { name: 'Steel' }, { name: 'Cement' }, { name: 'Tiles' }, { name: 'Paint' }, { name: 'Hardware' },
+    ];
+    return inMemoryStore[doctype];
+  }
+  if (doctype === 'User') {
+    inMemoryStore[doctype] = [
+      { name: 'abebe.girma@buildsupply.local', full_name: 'Abebe Girma', first_name: 'Abebe', last_name: 'Girma', user_type: 'System User', enabled: 1, mobile_no: '+251911000001', roles: [{ role: 'Import Manager' }] },
+      { name: 'sara.tekeste@buildsupply.local', full_name: 'Sara Tekeste', first_name: 'Sara', last_name: 'Tekeste', user_type: 'System User', enabled: 1, mobile_no: '+251911000002', roles: [{ role: 'Sales Manager' }] },
+      { name: 'daniel.hailu@buildsupply.local', full_name: 'Daniel Hailu', first_name: 'Daniel', last_name: 'Hailu', user_type: 'System User', enabled: 1, mobile_no: '+251911000003', roles: [{ role: 'Warehouse Manager' }] },
+      { name: 'mekdes.alemu@buildsupply.local', full_name: 'Mekdes Alemu', first_name: 'Mekdes', last_name: 'Alemu', user_type: 'System User', enabled: 1, mobile_no: '+251911000004', roles: [{ role: 'Accountant' }] },
+      { name: 'yonas.bekele@buildsupply.local', full_name: 'Yonas Bekele', first_name: 'Yonas', last_name: 'Bekele', user_type: 'System User', enabled: 1, mobile_no: '+251911000005', roles: [{ role: 'Sales Rep' }] },
+    ];
+    return inMemoryStore[doctype];
   }
   if (doctype === 'Customer') {
-    return [
+    inMemoryStore[doctype] = [
       { name: 'Sunshine Construction', customer_name: 'Sunshine Construction', customer_group: 'Commercial', territory: 'Ethiopia', credit_limit: 15_000_000, customer_type: 'Company', disabled: 0 },
       { name: 'Nile Building PLC', customer_name: 'Nile Building PLC', customer_group: 'Government', territory: 'Ethiopia', credit_limit: 25_000_000, customer_type: 'Company', disabled: 0 },
       { name: 'Abyssinia Developers', customer_name: 'Abyssinia Developers', customer_group: 'Commercial', territory: 'Ethiopia', credit_limit: 5_000_000, customer_type: 'Company', disabled: 0 },
       { name: 'Meskel Construction', customer_name: 'Meskel Construction', customer_group: 'Commercial', territory: 'Ethiopia', credit_limit: 10_000_000, customer_type: 'Company', disabled: 0 },
     ];
+    return inMemoryStore[doctype];
   }
   if (doctype === 'Supplier') {
-    return [
+    inMemoryStore[doctype] = [
       { name: 'SUP-001', supplier_name: 'Shanghai Steel Co.', supplier_group: 'Raw Material', country: 'China', supplier_type: 'Company' },
       { name: 'SUP-002', supplier_name: 'Istanbul Cement Ltd.', supplier_group: 'Raw Material', country: 'Turkey', supplier_type: 'Company' },
       { name: 'SUP-003', supplier_name: 'Dubai Tiles Trading', supplier_group: 'Distributor', country: 'UAE', supplier_type: 'Company' },
       { name: 'SUP-004', supplier_name: 'Guangzhou Paint Factory', supplier_group: 'Hardware', country: 'China', supplier_type: 'Company' },
       { name: 'SUP-005', supplier_name: 'Ankara Pipe Industries', supplier_group: 'Hardware', country: 'Turkey', supplier_type: 'Company' },
     ];
+    return inMemoryStore[doctype];
   }
   if (doctype === 'Warehouse') {
-    return [
+    inMemoryStore[doctype] = [
       { name: 'Main Store', warehouse_name: 'Main Store', warehouse_type: 'Transit', is_group: 0, company: 'Import Wholesale PLC' },
       { name: 'Tile Warehouse', warehouse_name: 'Tile Warehouse', warehouse_type: 'Store', is_group: 0, company: 'Import Wholesale PLC' },
       { name: 'Pipe Yard', warehouse_name: 'Pipe Yard', warehouse_type: 'Store', is_group: 0, company: 'Import Wholesale PLC' },
       { name: 'Paint Storage', warehouse_name: 'Paint Storage', warehouse_type: 'Transit', is_group: 0, company: 'Import Wholesale PLC' },
     ];
+    return inMemoryStore[doctype];
   }
   return [];
 }

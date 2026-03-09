@@ -6,6 +6,7 @@ import {
 import { useSalesOrders, useSalesInvoices } from '../../api/hooks/useOrders';
 import { fmtETB, fmtETBCompact } from '../../utils/format';
 import StatCard from '../../components/ui/StatCard';
+import PageSkeleton from '../../components/ui/PageSkeleton';
 import NewSalesOrderDrawer from './NewSalesOrderDrawer';
 import NewSalesInvoiceDrawer from './NewSalesInvoiceDrawer';
 import SalesOrderDetailDrawer from './SalesOrderDetailDrawer';
@@ -36,6 +37,8 @@ export default function SalesOrderList() {
   const { data: orders = [], isLoading: ordersLoading } = useSalesOrders();
   const { data: invoices = [], isLoading: invoicesLoading } = useSalesInvoices();
   
+  const isLoading = ordersLoading || invoicesLoading;
+  
   const [activeTab, setActiveTab] = useState<'invoices'|'orders'>('invoices');
   const [search, setSearch] = useState('');
   
@@ -65,6 +68,8 @@ export default function SalesOrderList() {
       o.customer_name?.toLowerCase().includes(search.toLowerCase())
     );
   }, [orders, search]);
+
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div className="flex flex-col gap-0">
@@ -133,12 +138,6 @@ export default function SalesOrderList() {
       {/* ── Main Content Container ── */}
       <div className="flex flex-col flex-1 px-6 pb-6 relative h-full">
         <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] overflow-hidden flex flex-col flex-1 shadow-sm mt-4">
-          {(activeTab === 'invoices' ? invoicesLoading : ordersLoading) && (
-            <div className="absolute inset-0 bg-[#00000020] backdrop-blur-sm z-10 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
-          
           <div className="overflow-auto flex-1 h-full">
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 z-10 bg-[var(--background)]">

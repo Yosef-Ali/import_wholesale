@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useSuppliers } from '../../api/hooks/useSuppliers';
 import { Truck, Plus, Search, Filter } from 'lucide-react';
 import StatCard from '../../components/ui/StatCard';
+import PageSkeleton from '../../components/ui/PageSkeleton';
 import NewSupplierDrawer from './NewSupplierDrawer';
 import SupplierDetailDrawer from './SupplierDetailDrawer';
 
@@ -35,6 +36,8 @@ export default function Suppliers() {
       s.supplier_name.toLowerCase().includes(q)
     );
   }, [suppliers, searchQuery]);
+
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div className="flex flex-col h-full bg-[var(--background)]">
@@ -83,7 +86,7 @@ export default function Suppliers() {
       {/* Table Area */}
       <div className="flex-1 px-6 pb-6 min-h-0">
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl h-full flex flex-col overflow-hidden shadow-sm">
-          {isLoading ? (
+          {false ? (
             <div className="flex flex-col items-center justify-center h-full text-[var(--muted-foreground)] gap-3 bg-[var(--background)]/50 backdrop-blur-sm">
               <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
             </div>

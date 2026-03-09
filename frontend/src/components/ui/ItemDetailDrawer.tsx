@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import {
   X, Package, ExternalLink, Warehouse, Tag, Scale,
   AlertTriangle, CheckCircle2, RefreshCw, Printer,
-  Edit2, TrendingUp, ShoppingCart, BarChart2, Trash2, Check, Loader2,
+  Edit2, TrendingUp, ShoppingCart, BarChart2, Trash2, Check, Loader2, Upload, Plus,
 } from 'lucide-react';
-import { useItemDetail, useItemStock, useUpdateItem, useDeleteItem } from '../../api/hooks/useItems';
-import { fmtETB } from '../../utils/format';
+import { useItemDetail, useItemStock, useUpdateItem, useDeleteItem, useUploadItemImage } from '../../api/hooks/useItems';
+import { fmtETB, erpnextUrl } from '../../utils/format';
 import { drawerEditClass as inputClass, drawerLabelClass as labelClass } from '../../utils/styles';
 import { toast } from '../../stores/toastStore';
-import type { StockLevel } from '../../api/types';
+import type { Item, StockLevel } from '../../api/types';
 
 /* ─── Mini stat block ─── */
 function Stat({ label, value, mono = false, wide = false }: { label: string; value: React.ReactNode; mono?: boolean; wide?: boolean }) {
@@ -80,10 +80,11 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
   const { data: stockData, isLoading: stockLoading } = useItemStock(item?.item_code ?? null);
   const updateItem = useUpdateItem();
   const deleteItem = useDeleteItem();
+  const uploadImage = useUploadItemImage();
 
   const [tab, setTab] = useState<Tab>('details');
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState<Partial<any>>({});
+  const [editForm, setEditForm] = useState<Partial<Item>>({});
 
   useEffect(() => {
     if (item && !isEditing) {
@@ -93,9 +94,7 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
         stock_uom: item.stock_uom,
         standard_rate: item.standard_rate,
         safety_stock: item.safety_stock,
-        is_stock_item: (item as any).is_stock_item,
-        is_sales_item: (item as any).is_sales_item,
-        is_purchase_item: (item as any).is_purchase_item,
+        ...(({ is_stock_item: (item as any).is_stock_item, is_sales_item: (item as any).is_sales_item, is_purchase_item: (item as any).is_purchase_item }) as any),
       });
     }
   }, [item, isEditing]);
@@ -170,11 +169,18 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
     });
   };
 
+  const handleFileUpload = (name: string, file: File) => {
+    uploadImage.mutate({ itemName: name, file }, {
+      onSuccess: () => toast.success('Image uploaded successfully'),
+      onError: (err: any) => toast.error(err.message || 'Image upload failed'),
+    });
+  };
+
   const handleDelete = () => {
     if (!itemName) return;
     if (confirm(`Delete ${item?.item_name ?? itemName}?`)) {
       deleteItem.mutate(itemName, {
-        onSuccess: () => onClose(),
+        onSuccess: () => { toast.success('Item deleted'); onClose(); },
         onError: (err: any) => toast.error(err.message || 'Failed to delete item'),
       });
     }
@@ -260,13 +266,49 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
                   {/* Hero */}
                   <div className="p-5 border-b border-[var(--border)]">
                     <div className="flex items-start gap-4">
-                      {item.image ? (
-                        <img src={item.image as string} alt="" className="w-24 h-24 rounded-xl object-cover bg-[var(--secondary)] shrink-0" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
-                      ) : (
-                        <div className="w-24 h-24 rounded-xl bg-[var(--secondary)] flex items-center justify-center shrink-0">
-                          <Package size={36} className="text-[var(--muted-foreground)]" />
-                        </div>
-                      )}
+                      <div className="relative group/upload shrink-0">
+                        {item.image ? (
+                          <img 
+                            src={item.image as string} 
+                            alt="" 
+                            className="w-24 h-24 rounded-xl object-cover bg-[var(--secondary)]" 
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} 
+                          />
+                        ) : (
+                          <div className="w-24 h-24 rounded-xl bg-[var(--secondary)] flex items-center justify-center">
+                            <Package size={36} className="text-[var(--muted-foreground)] group-hover/upload:opacity-0" />
+                          </div>
+                        )}
+                        <label 
+                          className={`absolute inset-0 flex items-center justify-center cursor-pointer rounded-xl transition-all
+                            ${item.image ? 'bg-black/40 opacity-0 group-hover/upload:opacity-100' : 'hover:border-2 hover:border-[var(--muted-foreground)] border border-dashed border-transparent'}
+                          `}
+                          title="Upload Image"
+                        >
+                          {uploadImage.isPending && uploadImage.variables?.itemName === item.name ? (
+                            <Loader2 size={30} className={`animate-spin ${item.image ? 'text-white' : 'text-[var(--muted-foreground)]'}`} />
+                          ) : (
+                            <div className={`opacity-0 group-hover/upload:opacity-100 transition-opacity flex flex-col items-center gap-1 ${item.image ? 'text-white' : 'text-[var(--primary)]'}`}>
+                              <Upload size={item.image ? 24 : 36} />
+                              {item.image && <span className="text-xs font-semibold">Replace</span>}
+                            </div>
+                          )}
+                          <input
+                            type="file"
+                            className="sr-only"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file && item.name) handleFileUpload(item.name, file);
+                            }}
+                          />
+                        </label>
+                        {!item.image && (
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[var(--primary)] rounded-full flex items-center justify-center border-2 border-[var(--card)] shadow-sm pointer-events-none">
+                            <Plus size={12} className="text-[var(--primary-foreground)]" />
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         {isEditing ? (
                           <input type="text" className={inputClass + ' font-secondary text-xl font-bold mb-1.5'} value={editForm.item_name || ''} onChange={e => setEditForm(p => ({ ...p, item_name: e.target.value }))} />
@@ -450,7 +492,7 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
               Close
             </button>
             <a
-              href={`${window.location.origin}/app/item/${itemName}`}
+              href={erpnextUrl(`/app/item/${itemName}`)}
               target="_blank" rel="noreferrer"
               className="text-sm font-secondary font-semibold px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] cursor-pointer hover:opacity-90 transition-opacity no-underline flex items-center gap-1.5"
             >

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useCustomer, useUpdateCustomer, useDeleteCustomer } from '../../api/hooks/useCustomers';
 import { Users, X, Edit2, Trash2, Printer, Loader2, MapPin, Check, ExternalLink } from 'lucide-react';
 import { toast } from '../../stores/toastStore';
-import { fmtETB } from '../../utils/format';
+import { fmtETB, erpnextUrl } from '../../utils/format';
 import { drawerEditClass as inputClass, drawerLabelClass as labelClass } from '../../utils/styles';
 import { Stat } from '../../components/ui/Badge';
 
@@ -41,7 +41,7 @@ export default function CustomerDetailDrawer({ editName, onClose }: Props) {
   };
 
   const handlePrint = () => {
-    window.open(`${window.location.origin}/printview?doctype=Customer&name=${editName}&format=Standard`, '_blank');
+    window.open(erpnextUrl(`/printview?doctype=Customer&name=${editName}&format=Standard`), '_blank');
   };
 
   return (
@@ -165,7 +165,7 @@ export default function CustomerDetailDrawer({ editName, onClose }: Props) {
               Close
             </button>
             <a
-              href={`${window.location.origin}/app/customer/${editName}`}
+              href={erpnextUrl(`/app/customer/${editName}`)}
               target="_blank" rel="noreferrer"
               className="text-sm font-secondary font-semibold px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] cursor-pointer hover:opacity-90 transition-opacity no-underline flex items-center gap-1.5"
             >

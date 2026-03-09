@@ -7,6 +7,7 @@ import TransactionsTable from '../../components/ui/TransactionsTable';
 import { useDashboardStats, useSalesTrend } from '../../api/hooks/useDashboard';
 import { useAuthStore } from '../../stores/authStore';
 import { fmtETBCompact } from '../../utils/format';
+import PageSkeleton from '../../components/ui/PageSkeleton';
 
 const TREND_FALLBACK = [
   { month: 'January',   total: 35000 },
@@ -40,11 +41,7 @@ export default function Dashboard() {
   const totalRevenue = fmtETBCompact(stats?.monthly_sales ?? 0);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <span className="font-secondary text-sm text-[var(--muted-foreground)]">Loading…</span>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (

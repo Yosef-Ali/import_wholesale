@@ -1,15 +1,17 @@
 import { useState, useMemo } from 'react';
 import {
-  Package, Search,
-  MoreHorizontal, Filter, Download, Plus, Info,
-  ChevronLeft, ChevronRight, LayoutGrid, List,
+    Package, Search,
+    MoreHorizontal, Filter, Download, Plus, Info,
+    ChevronLeft, ChevronRight, LayoutGrid, List, Upload, Loader2,
 } from 'lucide-react';
-import { useItems, useStockLevels, useItemGroups } from '../../api/hooks/useItems';
+import { useItems, useStockLevels, useItemGroups, useUploadItemImage } from '../../api/hooks/useItems';
 import { useDashboardStats } from '../../api/hooks/useDashboard';
 import StatCard from '../../components/ui/StatCard';
 import ItemDetailDrawer from '../../components/ui/ItemDetailDrawer';
 import NewItemDrawer from '../../components/ui/NewItemDrawer';
-import { fmtETB, fmtETBCompact } from '../../utils/format';
+import { fmtETB, fmtETBCompact, erpnextUrl } from '../../utils/format';
+import PageSkeleton from '../../components/ui/PageSkeleton';
+import { toast } from '../../stores/toastStore';
 import type { Item, StockLevel } from '../../api/types';
 
 /* ─── Stock badge ─── */
@@ -53,6 +55,7 @@ export default function ItemList() {
   const [page, setPage] = useState(0);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [isNewDrawerOpen, setIsNewDrawerOpen] = useState(false);
+  const uploadImage = useUploadItemImage();
   const PAGE_SIZE = 10;
 
   const { data: items, isLoading } = useItems(group || undefined);
@@ -99,12 +102,15 @@ export default function ItemList() {
     return 'ok';
   }
 
+  function handleFileUpload(itemName: string, file: File) {
+    uploadImage.mutate({ itemName, file }, {
+      onSuccess: () => toast.success('Image uploaded successfully'),
+      onError: (err: any) => toast.error(err.message || 'Upload failed'),
+    });
+  }
+
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <span className="font-secondary text-sm text-[var(--muted-foreground)]">Loading inventory…</span>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (
@@ -264,6 +270,7 @@ export default function ItemList() {
                       <div className="w-[68px] px-2 font-primary text-xs text-[var(--muted-foreground)] truncate shrink-0">
                         {item.item_code}
                       </div>
+
                       <div className="flex-[2] px-2 flex items-center gap-2.5 min-w-[120px]">
                         {item.image ? (
                           <img
@@ -273,8 +280,36 @@ export default function ItemList() {
                             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; (e.currentTarget.nextSibling as HTMLElement | null)?.style?.removeProperty('display'); }}
                           />
                         ) : null}
-                        <div className="w-7 h-7 rounded-md bg-[var(--secondary)] flex items-center justify-center shrink-0" style={{ display: item.image ? 'none' : undefined }}>
-                          <Package size={12} className="text-[var(--muted-foreground)]" />
+                        <div className="relative group/upload" style={{ display: item.image ? 'none' : undefined }}>
+                          <label 
+                            className="w-7 h-7 rounded-md bg-[var(--secondary)] flex items-center justify-center shrink-0 cursor-pointer hover:bg-[var(--border)] transition-colors border border-dashed border-transparent hover:border-[var(--muted-foreground)]" 
+                            title="Upload Image"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {uploadImage.isPending && uploadImage.variables?.itemName === item.name ? (
+                              <Loader2 size={12} className="animate-spin text-[var(--muted-foreground)]" />
+                            ) : (
+                              <Package size={12} className="text-[var(--muted-foreground)] group-hover/upload:opacity-0" />
+                            )}
+                            {!uploadImage.isPending || uploadImage.variables?.itemName !== item.name ? (
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/upload:opacity-100 transition-opacity">
+                                <Upload size={12} className="text-[var(--primary)]" />
+                              </div>
+                            ) : null}
+                            <input
+                              type="file"
+                              className="sr-only"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload(item.name, file);
+                              }}
+                            />
+                          </label>
+                          {/* Small plus badge to indicate action */}
+                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[var(--primary)] rounded-full flex items-center justify-center border border-[var(--background)] shadow-sm pointer-events-none">
+                            <Plus size={8} className="text-[var(--primary-foreground)]" />
+                          </div>
                         </div>
                         <span className="font-medium truncate text-[0.8125rem]">{item.item_name}</span>
                       </div>
@@ -296,7 +331,7 @@ export default function ItemList() {
                       <div className="w-10 flex justify-center shrink-0">
                         <button
                           className="p-1 rounded bg-transparent border-none cursor-pointer text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-                          onClick={(e) => { e.stopPropagation(); window.open(`${window.location.origin}/app/item/${item.name}`, '_blank'); }}
+                          onClick={(e) => { e.stopPropagation(); window.open(erpnextUrl(`/app/item/${item.name}`), '_blank'); }}
                           title="Open in ERPNext"
                         >
                           <MoreHorizontal size={14} />
@@ -377,8 +412,36 @@ export default function ItemList() {
                             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; (e.currentTarget.nextSibling as HTMLElement)?.style?.removeProperty('display'); }}
                           />
                         ) : null}
-                        <div className="w-12 h-12 rounded-lg bg-[var(--secondary)] flex items-center justify-center shrink-0" style={{ display: item.image ? 'none' : undefined }}>
-                          <Package size={20} className="text-[var(--muted-foreground)]" />
+                        <div className="relative group/upload shrink-0" style={{ display: item.image ? 'none' : undefined }}>
+                          <label 
+                            className="w-12 h-12 rounded-lg bg-[var(--secondary)] flex items-center justify-center cursor-pointer hover:bg-[var(--border)] transition-colors border border-dashed border-transparent hover:border-[var(--muted-foreground)]" 
+                            title="Upload Image"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {uploadImage.isPending && uploadImage.variables?.itemName === item.name ? (
+                              <Loader2 size={20} className="animate-spin text-[var(--muted-foreground)]" />
+                            ) : (
+                              <Package size={20} className="text-[var(--muted-foreground)] group-hover/upload:opacity-0" />
+                            )}
+                            {!uploadImage.isPending || uploadImage.variables?.itemName !== item.name ? (
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/upload:opacity-100 transition-opacity">
+                                <Upload size={20} className="text-[var(--primary)]" />
+                              </div>
+                            ) : null}
+                            <input
+                              type="file"
+                              className="sr-only"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload(item.name, file);
+                              }}
+                            />
+                          </label>
+                          {/* Small plus badge to indicate action */}
+                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[var(--primary)] rounded-full flex items-center justify-center border-2 border-[var(--background)] shadow-sm pointer-events-none">
+                            <Plus size={10} className="text-[var(--primary-foreground)]" />
+                          </div>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-secondary text-sm font-semibold text-[var(--foreground)] truncate group-hover:text-[var(--primary)] transition-colors">

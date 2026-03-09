@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getList, callMethod, getDoc, createDoc, updateDoc, deleteDoc } from '../client';
+import { getList, callMethod, getDoc, createDoc, updateDoc, deleteDoc, uploadFile } from '../client';
 import type { Item, StockLevel } from '../types';
 
 export function useItems(itemGroup?: string) {
@@ -90,6 +90,20 @@ export function useDeleteItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    },
+  });
+}
+
+export function useUploadItemImage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ itemName, file }: { itemName: string; file: File }) => {
+      const fileUrl = await uploadFile(file, 'Item', itemName, 'image');
+      return updateDoc('Item', itemName, { image: fileUrl });
+    },
+    onSuccess: (_, { itemName }) => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      queryClient.invalidateQueries({ queryKey: ['item-detail', itemName] });
     },
   });
 }

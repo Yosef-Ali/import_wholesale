@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { UserCog, ExternalLink, Loader2, Edit2, Check, X, Trash2 } from 'lucide-react';
 import { useUser, useUpdateUser, useDeleteUser, APP_ROLES } from '../../api/hooks/useUsers';
 import { toast } from '../../stores/toastStore';
+import { erpnextUrl } from '../../utils/format';
 import { drawerEditClass as inputClass, drawerLabelClass as labelClass } from '../../utils/styles';
 import { Stat } from '../../components/ui/Badge';
 
@@ -225,7 +226,7 @@ export default function UserDetailDrawer({ editName, onClose }: Props) {
               Close
             </button>
             <a
-              href={`${window.location.origin}/app/user/${editName}`}
+              href={erpnextUrl(`/app/user/${editName}`)}
               target="_blank" rel="noreferrer"
               className="text-sm font-secondary font-semibold px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] cursor-pointer hover:opacity-90 transition-opacity no-underline flex items-center gap-1.5"
             >

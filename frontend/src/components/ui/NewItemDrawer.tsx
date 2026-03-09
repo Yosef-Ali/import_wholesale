@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { X, Package, Save, ExternalLink, Loader2 } from 'lucide-react';
 import { useCreateItem, useItemGroups } from '../../api/hooks/useItems';
+import { erpnextUrl } from '../../utils/format';
 import { drawerInputClass as inputClass, drawerLabelClass as labelClass } from '../../utils/styles';
 import { toast } from '../../stores/toastStore';
 
@@ -149,7 +150,7 @@ export default function NewItemDrawer({ onClose }: Props) {
         {/* Footer */}
         <div className="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--background)]/40">
           <a
-            href={`${window.location.origin}/app/item/new-item-1`}
+            href={erpnextUrl(`/app/item/new-item-1`)}
             target="_blank" rel="noreferrer"
             className="text-sm font-secondary text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-1.5 transition-colors no-underline"
           >

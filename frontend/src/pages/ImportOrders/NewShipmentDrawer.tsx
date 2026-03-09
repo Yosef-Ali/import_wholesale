@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Anchor, Loader2, X, ExternalLink } from 'lucide-react';
 import { useCreateShipment } from '../../api/hooks/useOrders';
 import { toast } from '../../stores/toastStore';
+import { erpnextUrl } from '../../utils/format';
 import { drawerInputClass as inputClass, drawerLabelClass as labelClass } from '../../utils/styles';
 
 const STATUSES = [
@@ -165,7 +166,7 @@ export default function NewShipmentDrawer({ onClose }: Props) {
         {/* Footer */}
         <div className="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--background)]/40">
           <a
-            href={`${window.location.origin}/app/import-shipment/new-import-shipment-1`}
+            href={erpnextUrl(`/app/import-shipment/new-import-shipment-1`)}
             target="_blank" rel="noreferrer"
             className="text-sm font-secondary text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-1.5 transition-colors no-underline"
           >

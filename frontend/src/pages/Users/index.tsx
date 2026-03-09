@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Search, Filter, Plus, FileDown, Shield } from 'lucide-react';
 import { useUsers, APP_ROLES } from '../../api/hooks/useUsers';
 import StatCard from '../../components/ui/StatCard';
+import PageSkeleton from '../../components/ui/PageSkeleton';
 import NewUserDrawer from './NewUserDrawer';
 import UserDetailDrawer from './UserDetailDrawer';
 
@@ -25,6 +26,7 @@ function UserAvatar({ name }: { name: string }) {
 
 export default function Users() {
   const { data: users = [], isLoading } = useUsers();
+
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [isNewDrawerOpen, setIsNewDrawerOpen] = useState(false);
@@ -46,6 +48,8 @@ export default function Users() {
       return matchSearch && matchRole;
     });
   }, [users, search, roleFilter]);
+
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div className="flex flex-col gap-0">
@@ -112,11 +116,6 @@ export default function Users() {
       {/* Table */}
       <div className="flex flex-col flex-1 px-6 pb-6 relative h-full">
         <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] overflow-hidden flex flex-col flex-1 shadow-sm mt-4">
-          {isLoading && (
-            <div className="absolute inset-0 bg-[var(--background)]/60 backdrop-blur-sm z-10 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
-            </div>
-          )}
           <div className="overflow-auto flex-1 h-full">
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 z-10 bg-[var(--background)]">

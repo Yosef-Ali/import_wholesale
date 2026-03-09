@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { FileText, ExternalLink, Loader2, Edit2, Check, X, Printer, Trash2 } from 'lucide-react';
 import { useSalesInvoice, useUpdateSalesInvoice, useDeleteSalesInvoice } from '../../api/hooks/useOrders';
 import { toast } from '../../stores/toastStore';
-import { fmtETB } from '../../utils/format';
+import { fmtETB, erpnextUrl } from '../../utils/format';
 import { drawerEditClass as inputClass, drawerLabelClass as labelClass } from '../../utils/styles';
 import { Stat } from '../../components/ui/Badge';
 
@@ -70,7 +70,7 @@ export default function SalesInvoiceDetailDrawer({ editName, onClose }: Props) {
                 <button onClick={() => setIsEditing(true)} className="p-2 text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/10 rounded-lg transition-colors" title="Edit"><Edit2 size={15} /></button>
                 <button onClick={handleDelete} className="p-2 text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete"><Trash2 size={15} /></button>
                 <a
-                  href={`${window.location.origin}/api/method/frappe.utils.print_format.download_pdf?doctype=Sales%20Invoice&name=${editName}`}
+                  href={erpnextUrl(`/api/method/frappe.utils.print_format.download_pdf?doctype=Sales%20Invoice&name=${editName}`)}
                   target="_blank" rel="noreferrer"
                   className="p-2 text-[var(--muted-foreground)] hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors inline-flex items-center" title="Print"
                 ><Printer size={15} /></a>
@@ -152,7 +152,7 @@ export default function SalesInvoiceDetailDrawer({ editName, onClose }: Props) {
               Close
             </button>
             <a
-              href={`${window.location.origin}/app/sales-invoice/${editName}`}
+              href={erpnextUrl(`/app/sales-invoice/${editName}`)}
               target="_blank" rel="noreferrer"
               className="text-sm font-secondary font-semibold px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] cursor-pointer hover:opacity-90 transition-opacity no-underline flex items-center gap-1.5"
             >

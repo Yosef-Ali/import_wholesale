@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSupplier, useUpdateSupplier, useDeleteSupplier } from '../../api/hooks/useSuppliers';
 import { Truck, X, Edit2, Trash2, Printer, Loader2, MapPin, Check, ExternalLink } from 'lucide-react';
 import { toast } from '../../stores/toastStore';
+import { erpnextUrl } from '../../utils/format';
 import { drawerEditClass as inputClass, drawerLabelClass as labelClass } from '../../utils/styles';
 import { Stat } from '../../components/ui/Badge';
 
@@ -40,7 +41,7 @@ export default function SupplierDetailDrawer({ editName, onClose }: Props) {
   };
 
   const handlePrint = () => {
-    window.open(`${window.location.origin}/printview?doctype=Supplier&name=${editName}&format=Standard`, '_blank');
+    window.open(erpnextUrl(`/printview?doctype=Supplier&name=${editName}&format=Standard`), '_blank');
   };
 
   return (
@@ -154,7 +155,7 @@ export default function SupplierDetailDrawer({ editName, onClose }: Props) {
               Close
             </button>
             <a
-              href={`${window.location.origin}/app/supplier/${editName}`}
+              href={erpnextUrl(`/app/supplier/${editName}`)}
               target="_blank" rel="noreferrer"
               className="text-sm font-secondary font-semibold px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] cursor-pointer hover:opacity-90 transition-opacity no-underline flex items-center gap-1.5"
             >

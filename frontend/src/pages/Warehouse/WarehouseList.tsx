@@ -3,6 +3,7 @@ import { useWarehouses, useWarehouseSummary } from '../../api/hooks/useWarehouse
 import { Warehouse as WarehouseIcon, Plus, Search, Filter } from 'lucide-react';
 import { fmtETBCompact } from '../../utils/format';
 import StatCard from '../../components/ui/StatCard';
+import PageSkeleton from '../../components/ui/PageSkeleton';
 import NewWarehouseDrawer from './NewWarehouseDrawer';
 import WarehouseDetailDrawer from './WarehouseDetailDrawer';
 
@@ -49,6 +50,8 @@ export default function WarehouseList() {
       w.warehouse_name.toLowerCase().includes(q)
     );
   }, [warehouses, searchQuery]);
+
+  if (whLoading) return <PageSkeleton />;
 
   return (
     <div className="flex flex-col h-full bg-[var(--background)]">
@@ -97,7 +100,7 @@ export default function WarehouseList() {
       {/* Table Area */}
       <div className="flex-1 px-6 pb-6 min-h-0">
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl h-full flex flex-col overflow-hidden shadow-sm">
-          {whLoading ? (
+          {false ? (
             <div className="flex flex-col items-center justify-center h-full text-[var(--muted-foreground)] gap-3 bg-[var(--background)]/50 backdrop-blur-sm">
               <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
             </div>

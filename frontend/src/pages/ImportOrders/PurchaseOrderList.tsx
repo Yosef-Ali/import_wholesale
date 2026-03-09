@@ -4,8 +4,9 @@ import {
   Clock, ArrowRight, MapPin, Calendar as CalendarIcon, Hash
 } from 'lucide-react';
 import { usePurchaseOrders, useImportShipments } from '../../api/hooks/useOrders';
-import { fmtETB, fmtETBCompact } from '../../utils/format';
+import { fmtETB, fmtETBCompact, erpnextUrl } from '../../utils/format';
 import StatCard from '../../components/ui/StatCard';
+import PageSkeleton from '../../components/ui/PageSkeleton';
 import NewShipmentDrawer from './NewShipmentDrawer';
 import ShipmentDetailDrawer from './ShipmentDetailDrawer';
 
@@ -32,6 +33,8 @@ function POBadge({ status }: { status: string }) {
 export default function PurchaseOrderList() {
   const { data: orders = [], isLoading: ordersLoading } = usePurchaseOrders();
   const { data: shipments = [], isLoading: shipmentsLoading } = useImportShipments();
+  
+  const isLoading = ordersLoading || shipmentsLoading;
   
   const [activeTab, setActiveTab] = useState<'shipments'|'pos'>('shipments');
   const [search, setSearch] = useState('');
@@ -61,6 +64,8 @@ export default function PurchaseOrderList() {
       o.supplier_name?.toLowerCase().includes(search.toLowerCase())
     );
   }, [orders, search]);
+
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div className="flex flex-col gap-0">
@@ -129,12 +134,6 @@ export default function PurchaseOrderList() {
       {/* ── Main Content Container ── */}
       <div className="flex flex-col flex-1 px-6 pb-6 relative h-full">
         <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] overflow-hidden flex flex-col flex-1 shadow-sm">
-          {(activeTab === 'shipments' ? shipmentsLoading : ordersLoading) && (
-            <div className="absolute inset-0 bg-[#00000020] backdrop-blur-sm z-10 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
-          
           <div className="overflow-auto flex-1 h-full">
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 z-10 bg-[var(--background)]">
@@ -212,7 +211,7 @@ export default function PurchaseOrderList() {
                 {activeTab === 'pos' && filteredPOs.map((o) => (
                   <tr 
                     key={o.name}
-                    onClick={() => window.open(`${window.location.origin}/app/purchase-order/${o.name}`, '_blank')}
+                    onClick={() => window.open(erpnextUrl(`/app/purchase-order/${o.name}`), '_blank')}
                     className="group hover:bg-[var(--secondary)] cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3">
