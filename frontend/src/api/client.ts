@@ -228,9 +228,13 @@ export async function uploadFile(
     formData.append('fieldname', fieldname);
     formData.append('is_private', '0');
 
+    const csrfToken = await getCsrfToken();
+    const headers: Record<string, string> = {};
+    if (csrfToken) headers['X-Frappe-CSRF-Token'] = csrfToken;
+
     const res = await fetch(`${BASE}/method/upload_file`, {
       method: 'POST',
-      headers: { 'X-Frappe-CSRF-Token': await getCsrfToken() },
+      headers,
       body: formData,
       credentials: 'include',
     });
@@ -250,25 +254,28 @@ export async function uploadFile(
 // ── CSRF token ───────────────────────────────────────────────────────
 
 let _csrfToken: string | null = null;
+let _csrfFetched = false;
 
 async function getCsrfToken(): Promise<string> {
-  if (_csrfToken) return _csrfToken;
+  if (_csrfFetched) return _csrfToken ?? '';
+  _csrfFetched = true;
   try {
     const res = await fetch(`${BASE}/method/frappe.auth.get_csrf_token`, {
       credentials: 'include',
     });
     if (!res.ok) throw new Error('CSRF endpoint unavailable');
     const json = await res.json();
-    _csrfToken = json.message ?? '';
+    _csrfToken = json.message || null;
   } catch {
     // Frappe v16+ may not expose this endpoint; CSRF is optional with cookie auth
-    _csrfToken = '';
+    _csrfToken = null;
   }
   return _csrfToken ?? '';
 }
 
 export function clearCsrfToken() {
   _csrfToken = null;
+  _csrfFetched = false;
 }
 
 // ── Count helper ─────────────────────────────────────────────────────
