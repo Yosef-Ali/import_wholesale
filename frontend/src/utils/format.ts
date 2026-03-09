@@ -4,7 +4,8 @@ const _fmtPlain = new Intl.NumberFormat('en-ET', { maximumFractionDigits: 0 });
  *  Uses VITE_ERPNEXT_URL when React is served on a different port than ERPNext (e.g. Hostinger VPS).
  *  Falls back to window.location.origin for local dev. */
 export function erpnextUrl(path: string): string {
-  const base = (import.meta.env.VITE_ERPNEXT_URL as string | undefined) || window.location.origin;
+  const base = (import.meta.env.VITE_ERPNEXT_URL as string | undefined) ||
+    (import.meta.env.DEV ? 'http://localhost:8081' : window.location.origin);
   return `${base}${path}`;
 }
 
@@ -13,7 +14,7 @@ const _fmtCurrency = new Intl.NumberFormat('en-ET', { style: 'currency', currenc
 /** Format a number as compact ETB (e.g. ETB 4.2M, ETB 320K) */
 export function fmtETBCompact(val: number): string {
   if (val >= 1_000_000) return `ETB ${(val / 1_000_000).toFixed(1)}M`;
-  if (val >= 1_000)     return `ETB ${(val / 1_000).toFixed(0)}K`;
+  if (val >= 1_000) return `ETB ${(val / 1_000).toFixed(0)}K`;
   return `ETB ${_fmtPlain.format(val)}`;
 }
 
