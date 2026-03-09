@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getList, callMethod, getDoc, createDoc, updateDoc, deleteDoc, uploadFile } from '../client';
+import { toast } from '../../stores/toastStore';
 import type { Item, StockLevel } from '../types';
 
 export function useItems(itemGroup?: string) {
@@ -104,6 +105,10 @@ export function useUploadItemImage() {
     onSuccess: (_, { itemName }) => {
       queryClient.invalidateQueries({ queryKey: ['items'] });
       queryClient.invalidateQueries({ queryKey: ['item-detail', itemName] });
+      toast.success('Image uploaded successfully');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Image upload failed');
     },
   });
 }
