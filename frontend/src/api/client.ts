@@ -116,7 +116,10 @@ export async function createDoc<T = Record<string, unknown>>(
       body: JSON.stringify(data),
       credentials: 'include',
     });
-    if (!res.ok) throw new Error(`Failed to create ${doctype}`);
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`Create ${doctype} failed (${res.status}): ${body.slice(0, 200)}`);
+    }
     const json: FrappeResponse<T> = await res.json();
     return json.data;
   } catch (err) {
@@ -146,7 +149,10 @@ export async function updateDoc<T = Record<string, unknown>>(
         credentials: 'include',
       }
     );
-    if (!res.ok) throw new Error(`Failed to update ${doctype}/${name}`);
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`Update ${doctype}/${name} failed (${res.status}): ${body.slice(0, 200)}`);
+    }
     const json: FrappeResponse<T> = await res.json();
     return json.data;
   } catch (err) {
@@ -174,7 +180,10 @@ export async function deleteDoc(doctype: string, name: string) {
         credentials: 'include',
       }
     );
-    if (!res.ok) throw new Error(`Failed to delete ${doctype}/${name}`);
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`Delete ${doctype}/${name} failed (${res.status}): ${body.slice(0, 200)}`);
+    }
   } catch (err) {
     if (DEV_BYPASS) {
       console.warn(`[DEV] deleteDoc(${doctype}, ${name}) failed, modifying inMemoryStore`);
@@ -200,7 +209,10 @@ export async function callMethod<T = unknown>(
       body: JSON.stringify(args || {}),
       credentials: 'include',
     });
-    if (!res.ok) throw new Error(`Method ${method} failed`);
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`Method ${method} failed (${res.status}): ${body.slice(0, 200)}`);
+    }
     const json = await res.json();
     return json.message;
   } catch (err) {
@@ -239,7 +251,10 @@ export async function uploadFile(
       credentials: 'include',
     });
 
-    if (!res.ok) throw new Error('File upload failed');
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`Upload failed (${res.status}): ${body.slice(0, 200)}`);
+    }
     const json = await res.json();
     return json.message.file_url;
   } catch (err) {
