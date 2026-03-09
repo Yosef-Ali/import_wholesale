@@ -15,32 +15,39 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script_stop: true
-          script: |
-            set -e
-            echo "==> Pulling latest code..."
-            cd /opt/buildsupply
-            git pull origin master
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
-            echo "==> Building React UI image..."
-            cd docker
-            docker compose -p buildsupply build react-ui
+      - name: Deploy to VPS
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' <<'DEPLOY'
+          set -e
+          echo "==> Pulling latest code..."
+          cd /opt/buildsupply
+          git pull origin master
 
-            echo "==> Restarting React UI container..."
-            docker compose -p buildsupply up -d --no-deps react-ui
+          echo "==> Building React UI image..."
+          cd docker
+          docker compose -p buildsupply build react-ui
 
-            echo "==> Verifying deployment..."
-            sleep 3
-            if curl -sf http://localhost:3002 > /dev/null; then
-              echo "✅ BuildSupply Pro is live on port 3002"
-            else
-              echo "❌ Health check failed!"
-              docker compose -p buildsupply logs --tail=20 react-ui
-              exit 1
-            fi
+          echo "==> Restarting React UI container..."
+          docker compose -p buildsupply up -d --no-deps react-ui
+
+          echo "==> Verifying deployment..."
+          sleep 3
+          if curl -sf http://localhost:3002 > /dev/null; then
+            echo "✅ BuildSupply Pro is live on port 3002"
+          else
+            echo "❌ Health check failed!"
+            docker compose -p buildsupply logs --tail=20 react-ui
+            exit 1
+          fi
+          DEPLOY
+
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
