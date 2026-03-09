@@ -112,7 +112,7 @@ export async function createDoc<T = Record<string, unknown>>(
   try {
     const res = await fetch(`${BASE}/resource/${encodeURIComponent(doctype)}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': await getCsrfToken() },
+      headers: await writeHeaders('application/json'),
       body: JSON.stringify(data),
       credentials: 'include',
     });
@@ -141,7 +141,7 @@ export async function updateDoc<T = Record<string, unknown>>(
       `${BASE}/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`,
       {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': await getCsrfToken() },
+        headers: await writeHeaders('application/json'),
         body: JSON.stringify(data),
         credentials: 'include',
       }
@@ -170,7 +170,7 @@ export async function deleteDoc(doctype: string, name: string) {
       `${BASE}/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`,
       {
         method: 'DELETE',
-        headers: { 'X-Frappe-CSRF-Token': await getCsrfToken() },
+        headers: await writeHeaders(),
         credentials: 'include',
       }
     );
@@ -196,7 +196,7 @@ export async function callMethod<T = unknown>(
   try {
     const res = await fetch(`${BASE}/method/${method}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': await getCsrfToken() },
+      headers: await writeHeaders('application/json'),
       body: JSON.stringify(args || {}),
       credentials: 'include',
     });
@@ -271,6 +271,15 @@ async function getCsrfToken(): Promise<string> {
     _csrfToken = null;
   }
   return _csrfToken ?? '';
+}
+
+/** Build headers for write operations (POST/PUT/DELETE) with optional CSRF */
+async function writeHeaders(contentType?: string): Promise<Record<string, string>> {
+  const h: Record<string, string> = {};
+  if (contentType) h['Content-Type'] = contentType;
+  const csrf = await getCsrfToken();
+  if (csrf) h['X-Frappe-CSRF-Token'] = csrf;
+  return h;
 }
 
 export function clearCsrfToken() {
