@@ -253,12 +253,18 @@ let _csrfToken: string | null = null;
 
 async function getCsrfToken(): Promise<string> {
   if (_csrfToken) return _csrfToken;
-  const res = await fetch(`${BASE}/method/frappe.auth.get_csrf_token`, {
-    credentials: 'include',
-  });
-  const json = await res.json();
-  _csrfToken = json.message;
-  return _csrfToken!;
+  try {
+    const res = await fetch(`${BASE}/method/frappe.auth.get_csrf_token`, {
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('CSRF endpoint unavailable');
+    const json = await res.json();
+    _csrfToken = json.message ?? '';
+  } catch {
+    // Frappe v16+ may not expose this endpoint; CSRF is optional with cookie auth
+    _csrfToken = '';
+  }
+  return _csrfToken ?? '';
 }
 
 export function clearCsrfToken() {
