@@ -82,6 +82,7 @@ services:
           if (( `date +%s`-start > 120 )); then echo "Timeout!"; exit 1; fi;
         done;
         echo "Config ready. Creating site...";
+        grep -qx buildsupply sites/apps.txt 2>/dev/null || echo buildsupply >> sites/apps.txt;
         bench new-site --no-mariadb-socket --mariadb-root-password ${DB_ROOT_PASSWORD:-admin} --install-app erpnext --install-app buildsupply --admin-password ${ADMIN_PASSWORD:-admin} frontend 2>/dev/null || true;
         bench --site frontend install-app buildsupply 2>/dev/null || true;
         bench --site frontend migrate;

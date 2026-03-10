@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Search, Bell, Command, Sparkles } from 'lucide-react';
 import Sidebar from './Sidebar';
-import ToastContainer from '../ui/ToastContainer';
 import GuidePanel from '../ui/GuidePanel';
 import ChatBot from '../ui/ChatBot';
 
@@ -67,7 +66,6 @@ export default function AppLayout() {
         </main>
       </div>
 
-      <ToastContainer />
       {guideOpen && <GuidePanel onClose={() => setGuideOpen(false)} />}
       {chatOpen && <ChatBot onClose={() => setChatOpen(false)} />}
     </div>

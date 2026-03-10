@@ -5,6 +5,20 @@ const BASE = '/api';
 // Active in local dev OR when VITE_MOCK_MODE=true (e.g. Vercel demo without backend)
 const DEV_BYPASS = import.meta.env.VITE_MOCK_MODE === 'true';
 
+/** Convert HTTP status codes to actionable messages instead of raw HTML from nginx */
+function friendlyHttpError(status: number, action: string): string {
+  switch (status) {
+    case 401: return 'Session expired — please log in again';
+    case 403: return 'Permission denied — you lack access for this action';
+    case 404: return `${action}: resource not found`;
+    case 413: return 'File too large — max 50 MB';
+    case 502:
+    case 503:
+    case 504: return 'ERPNext server is unreachable — please check if the backend is running';
+    default:  return `${action} failed (HTTP ${status})`;
+  }
+}
+
 interface FrappeListParams {
   doctype: string;
   fields?: string[];
@@ -117,8 +131,7 @@ export async function createDoc<T = Record<string, unknown>>(
       credentials: 'include',
     });
     if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`Create ${doctype} failed (${res.status}): ${body.slice(0, 200)}`);
+      throw new Error(friendlyHttpError(res.status, `Create ${doctype}`));
     }
     const json: FrappeResponse<T> = await res.json();
     return json.data;
@@ -150,8 +163,7 @@ export async function updateDoc<T = Record<string, unknown>>(
       }
     );
     if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`Update ${doctype}/${name} failed (${res.status}): ${body.slice(0, 200)}`);
+      throw new Error(friendlyHttpError(res.status, `Update ${doctype}/${name}`));
     }
     const json: FrappeResponse<T> = await res.json();
     return json.data;
@@ -181,8 +193,7 @@ export async function deleteDoc(doctype: string, name: string) {
       }
     );
     if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`Delete ${doctype}/${name} failed (${res.status}): ${body.slice(0, 200)}`);
+      throw new Error(friendlyHttpError(res.status, `Delete ${doctype}/${name}`));
     }
   } catch (err) {
     if (DEV_BYPASS) {
@@ -210,8 +221,7 @@ export async function callMethod<T = unknown>(
       credentials: 'include',
     });
     if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`Method ${method} failed (${res.status}): ${body.slice(0, 200)}`);
+      throw new Error(friendlyHttpError(res.status, method.split('.').pop() || 'API call'));
     }
     const json = await res.json();
     return json.message;
@@ -252,8 +262,7 @@ export async function uploadFile(
     });
 
     if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`Upload failed (${res.status}): ${body.slice(0, 200)}`);
+      throw new Error(friendlyHttpError(res.status, 'Upload'));
     }
     const json = await res.json();
     return json.message.file_url;

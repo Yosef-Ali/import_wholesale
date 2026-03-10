@@ -3,6 +3,7 @@ import type { ReactNode, ErrorInfo } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './stores/authStore'
 import AppLayout from './components/Layout/AppLayout'
+import ToastContainer from './components/ui/ToastContainer'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import ItemList from './pages/Inventory/ItemList'
@@ -79,6 +80,8 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      {/* Toast lives outside Router so it works on login page too */}
+      <ToastContainer />
     </ErrorBoundary>
   )
 }
