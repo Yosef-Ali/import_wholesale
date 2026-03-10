@@ -14,10 +14,14 @@ interface ToastStore {
   remove: (id: string) => void;
 }
 
+/** Works on plain HTTP — crypto.randomUUID() requires HTTPS */
+let _counter = 0;
+const uid = () => `t-${Date.now()}-${++_counter}`;
+
 export const useToastStore = create<ToastStore>((set) => ({
   toasts: [],
   add: (type, message) => {
-    const id = crypto.randomUUID();
+    const id = uid();
     set((s) => ({ toasts: [...s.toasts, { id, type, message }] }));
     setTimeout(() => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), 4000);
   },
