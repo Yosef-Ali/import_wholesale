@@ -117,22 +117,23 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
     if (!item) return;
     const win = window.open('', '_blank');
     if (!win) return;
-    win.document.write(`
-      <html><head><title>${item.item_name}</title>
-      <style>
-        body { font-family: system-ui, sans-serif; padding: 32px; color: #111; }
-        h1 { font-size: 22px; margin-bottom: 4px; }
-        .code { font-size: 12px; color: #666; margin-bottom: 24px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-        th { text-align: left; font-size: 11px; text-transform: uppercase; color: #888; padding: 6px 8px; border-bottom: 2px solid #eee; }
-        td { padding: 8px; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
-        .section { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #888; margin-top: 24px; margin-bottom: 8px; letter-spacing: 0.08em; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; }
-        .ok { background: #dcfce7; color: #16a34a; }
-        .low { background: #fef3c7; color: #d97706; }
-        .out { background: #fee2e2; color: #dc2626; }
-      </style>
-      </head><body>
+    win.document.title = item.item_name;
+    const style = win.document.createElement('style');
+    style.textContent = `
+      body { font-family: system-ui, sans-serif; padding: 32px; color: #111; }
+      h1 { font-size: 22px; margin-bottom: 4px; }
+      .code { font-size: 12px; color: #666; margin-bottom: 24px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+      th { text-align: left; font-size: 11px; text-transform: uppercase; color: #888; padding: 6px 8px; border-bottom: 2px solid #eee; }
+      td { padding: 8px; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+      .section { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #888; margin-top: 24px; margin-bottom: 8px; letter-spacing: 0.08em; }
+      .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; }
+      .ok { background: #dcfce7; color: #16a34a; }
+      .low { background: #fef3c7; color: #d97706; }
+      .out { background: #fee2e2; color: #dc2626; }
+    `;
+    win.document.head.appendChild(style);
+    win.document.body.innerHTML = `
       <h1>${item.item_name}</h1>
       <div class="code">SKU: ${item.item_code} · Group: ${item.item_group} · UOM: ${item.stock_uom}</div>
       <div class="section">Pricing</div>
@@ -156,9 +157,7 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
         }).join('')}
         <tr style="border-top:2px solid #eee"><td><strong>Total</strong></td><td><strong>${totalStock}</strong></td><td><strong>${totalReserved}</strong></td><td><strong>${totalStock - totalReserved}</strong></td><td></td></tr>
       </table>
-      </body></html>
-    `);
-    win.document.close();
+    `;
     win.focus();
     setTimeout(() => win.print(), 400);
   };
@@ -181,7 +180,7 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
   const handleDelete = () => {
     if (!itemName) return;
     deleteItem.mutate(itemName, {
-      onSuccess: () => { toast.success('Item deleted'); onClose(); setShowConfirm(false); },
+      onSuccess: () => { toast.success('Item deleted'); setShowConfirm(false); onClose(); },
       onError: (err: any) => { toast.error(err.message || 'Failed to delete item'); setShowConfirm(false); },
     });
   };
