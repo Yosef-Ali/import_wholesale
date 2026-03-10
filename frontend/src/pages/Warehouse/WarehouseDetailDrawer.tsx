@@ -5,6 +5,7 @@ import { toast } from '../../stores/toastStore';
 import { erpnextUrl } from '../../utils/format';
 import { drawerEditClass as inputClass, drawerLabelClass as labelClass } from '../../utils/styles';
 import { Stat } from '../../components/ui/Badge';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 interface Props { editName: string; onClose: () => void }
 
@@ -13,6 +14,7 @@ export default function WarehouseDetailDrawer({ editName, onClose }: Props) {
   const updateWrapper = useUpdateWarehouse();
   const deleteWrapper = useDeleteWarehouse();
   const [isEditing, setIsEditing] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [form, setForm] = useState<Record<string, any>>({});
 
   useEffect(() => {
@@ -30,13 +32,14 @@ export default function WarehouseDetailDrawer({ editName, onClose }: Props) {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Delete warehouse ${editName}?`)) return;
     try {
       await deleteWrapper.mutateAsync(editName);
       toast.success('Warehouse deleted');
       onClose();
     } catch (e: any) {
       toast.error(e.message || 'Failed to delete Warehouse');
+    } finally {
+      setShowConfirm(false);
     }
   };
 
@@ -64,7 +67,7 @@ export default function WarehouseDetailDrawer({ editName, onClose }: Props) {
             {!isEditing ? (
               <>
                 <button onClick={() => setIsEditing(true)} className="p-2 text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/10 rounded-lg transition-colors" title="Edit"><Edit2 size={15} /></button>
-                <button onClick={handleDelete} className="p-2 text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete"><Trash2 size={15} /></button>
+                <button onClick={() => setShowConfirm(true)} className="p-2 text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete"><Trash2 size={15} /></button>
                 <button onClick={onClose} className="p-2 text-[var(--muted-foreground)] hover:bg-[var(--secondary)] rounded-lg transition-colors ml-1"><X size={16} /></button>
               </>
             ) : (
@@ -152,6 +155,15 @@ export default function WarehouseDetailDrawer({ editName, onClose }: Props) {
         </div>
 
       </div>
+      {showConfirm && (
+        <ConfirmDialog
+          title="Delete Warehouse"
+          message={`Are you sure you want to delete ${item?.warehouse_name || editName}? This cannot be undone.`}
+          onConfirm={handleDelete}
+          onCancel={() => setShowConfirm(false)}
+          loading={deleteWrapper.isPending}
+        />
+      )}
     </>
   );
 }

@@ -9,6 +9,7 @@ import { fmtETB, erpnextUrl } from '../../utils/format';
 import { drawerEditClass as inputClass, drawerLabelClass as labelClass } from '../../utils/styles';
 import { toast } from '../../stores/toastStore';
 import type { Item, StockLevel } from '../../api/types';
+import ConfirmDialog from './ConfirmDialog';
 
 /* ─── Mini stat block ─── */
 function Stat({ label, value, mono = false, wide = false }: { label: string; value: React.ReactNode; mono?: boolean; wide?: boolean }) {
@@ -84,6 +85,7 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
 
   const [tab, setTab] = useState<Tab>('details');
   const [isEditing, setIsEditing] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Item>>({});
 
   useEffect(() => {
@@ -178,12 +180,10 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
 
   const handleDelete = () => {
     if (!itemName) return;
-    if (confirm(`Delete ${item?.item_name ?? itemName}?`)) {
-      deleteItem.mutate(itemName, {
-        onSuccess: () => { toast.success('Item deleted'); onClose(); },
-        onError: (err: any) => toast.error(err.message || 'Failed to delete item'),
-      });
-    }
+    deleteItem.mutate(itemName, {
+      onSuccess: () => { toast.success('Item deleted'); onClose(); setShowConfirm(false); },
+      onError: (err: any) => { toast.error(err.message || 'Failed to delete item'); setShowConfirm(false); },
+    });
   };
 
   const TABS = [
@@ -216,7 +216,7 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
             {!isEditing ? (
               <>
                 <button onClick={() => { setTab('details'); setIsEditing(true); }} className="p-2 text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/10 rounded-lg transition-colors" title="Edit"><Edit2 size={15} /></button>
-                <button onClick={handleDelete} disabled={deleteItem.isPending || !item} className="p-2 text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-40" title="Delete">
+                <button onClick={() => setShowConfirm(true)} disabled={deleteItem.isPending || !item} className="p-2 text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-40" title="Delete">
                   {deleteItem.isPending ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
                 </button>
                 <button onClick={handlePrint} disabled={!item} className="p-2 text-[var(--muted-foreground)] hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors disabled:opacity-40" title="Print"><Printer size={15} /></button>
@@ -502,6 +502,15 @@ export default function ItemDetailDrawer({ itemName, stockLevel, onClose }: Prop
         </div>
 
       </div>
+      {showConfirm && (
+        <ConfirmDialog
+          title="Delete Item"
+          message={`Are you sure you want to delete ${item?.item_name ?? itemName}? This cannot be undone.`}
+          onConfirm={handleDelete}
+          onCancel={() => setShowConfirm(false)}
+          loading={deleteItem.isPending}
+        />
+      )}
     </>
   );
 }
