@@ -1,0 +1,13 @@
+# Local development scripts output / temp uploads
+item_images_for_upload/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+
+# Env files
+.env
+.env.local
