@@ -33,7 +33,7 @@ jobs:
           docker compose -p buildsupply build react-ui
 
           echo "==> Restarting React UI container..."
-          docker compose -p buildsupply up -d --no-deps react-ui
+          docker compose -p buildsupply up -d --no-deps --force-recreate react-ui
 
           echo "==> Verifying deployment..."
           sleep 3
