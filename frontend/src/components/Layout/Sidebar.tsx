@@ -2,36 +2,54 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Package, Ship, ShoppingCart,
   Warehouse as WarehouseIcon, Users, UserCheck, UserCog, BarChart3, LogOut, BookOpen,
-  ChevronDown, ChevronsUpDown, FileText, Printer, ClipboardList,
+  ChevronDown, ChevronsUpDown, FileText, Printer, ClipboardList, Landmark,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 
-const mainNav = [
+// Sidebar grouped to mirror the ERPNext modules / import-to-wholesale document flow,
+// using the doctype names users recognise (Purchase Order, Sales Order, …).
+// See PLAN_UX_ERPNEXT_WORKFLOW.md.
+const overviewNav = [
   { to: '/',              icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/inventory',     icon: Package,         label: 'Inventory' },
-  { to: '/import-orders', icon: Ship,            label: 'Import Orders' },
-  { to: '/wholesale',     icon: ShoppingCart,    label: 'Wholesale' },
+];
+
+const buyingNav = [
+  { to: '/import-orders', icon: Ship,            label: 'Purchase Orders' },
+  { to: '/suppliers',     icon: UserCheck,       label: 'Suppliers' },
+];
+
+const inventoryNav = [
+  { to: '/inventory',     icon: Package,         label: 'Items' },
   { to: '/warehouse',     icon: WarehouseIcon,   label: 'Warehouse' },
 ];
 
-const peopleNav = [
-  { to: '/suppliers',  icon: UserCheck, label: 'Suppliers' },
-  { to: '/customers',  icon: Users,     label: 'Customers' },
-  { to: '/users',      icon: UserCog,   label: 'User Management' },
+const sellingNav = [
+  { to: '/wholesale',     icon: ShoppingCart,    label: 'Sales Orders' },
+  { to: '/customers',     icon: Users,           label: 'Customers' },
 ];
 
-const analyticsNav = [
-  { to: '/reports', icon: BarChart3, label: 'Reports' },
+// Finance/admin only — surfaces the accounting side of the import workflow.
+const accountingNav = [
+  { to: '/cost-sheet',    icon: Landmark,        label: 'Cost Sheet' },
+  { to: '/reports',       icon: BarChart3,       label: 'Reports' },
+];
+
+// Admin only.
+const settingsNav = [
+  { to: '/users',         icon: UserCog,         label: 'User Management' },
 ];
 
 // Admin-only design previews — static HTML mockups served from /public.
 // TODO: swap each to its real React route (e.g. /cost-sheet) once the
 // landed-cost backend is migrated to production.
-const adminNav = [
+const designPreviews = [
   { href: '/import_cost_sheet_preview.html',       icon: FileText,      label: 'Cost Sheet Preview' },
   { href: '/import_cost_sheet_print_preview.html', icon: Printer,       label: 'Cost Sheet (Print)' },
   { href: '/import_intake_form.html',              icon: ClipboardList, label: 'Intake Form' },
 ];
+
+// ERPNext finance roles that, alongside admins, may see the Accounting group.
+const FINANCE_ROLES = ['Accounts Manager', 'Accounts User'];
 
 interface Props { onGuideOpen: () => void }
 
@@ -79,6 +97,8 @@ function ExternalItem({ href, icon: Icon, label }: { href: string; icon: typeof 
 export default function Sidebar({ onGuideOpen }: Props) {
   const logout = useAuthStore((s) => s.logout);
   const isAdmin = useAuthStore((s) => s.isAdmin);
+  const roles = useAuthStore((s) => s.roles);
+  const isFinance = isAdmin || roles.some((r) => FINANCE_ROLES.includes(r));
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[280px] bg-[var(--sidebar)] flex flex-col border-r border-[var(--sidebar-border)] z-40">
@@ -99,19 +119,30 @@ export default function Sidebar({ onGuideOpen }: Props) {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-4">
-        <SectionTitle>Operations</SectionTitle>
-        {mainNav.map((item) => <NavItem key={item.to} {...item} />)}
+        <SectionTitle>Overview</SectionTitle>
+        {overviewNav.map((item) => <NavItem key={item.to} {...item} />)}
 
-        <SectionTitle>People</SectionTitle>
-        {peopleNav.map((item) => <NavItem key={item.to} {...item} />)}
+        <SectionTitle>Buying &amp; Import</SectionTitle>
+        {buyingNav.map((item) => <NavItem key={item.to} {...item} />)}
 
-        <SectionTitle>Analytics</SectionTitle>
-        {analyticsNav.map((item) => <NavItem key={item.to} {...item} />)}
+        <SectionTitle>Inventory</SectionTitle>
+        {inventoryNav.map((item) => <NavItem key={item.to} {...item} />)}
+
+        <SectionTitle>Wholesale &amp; Selling</SectionTitle>
+        {sellingNav.map((item) => <NavItem key={item.to} {...item} />)}
+
+        {isFinance && (
+          <>
+            <SectionTitle>Accounting</SectionTitle>
+            {accountingNav.map((item) => <NavItem key={item.to} {...item} />)}
+          </>
+        )}
 
         {isAdmin && (
           <>
-            <SectionTitle>Admin</SectionTitle>
-            {adminNav.map((item) => <ExternalItem key={item.href} {...item} />)}
+            <SectionTitle>Settings</SectionTitle>
+            {settingsNav.map((item) => <NavItem key={item.to} {...item} />)}
+            {designPreviews.map((item) => <ExternalItem key={item.href} {...item} />)}
           </>
         )}
       </nav>

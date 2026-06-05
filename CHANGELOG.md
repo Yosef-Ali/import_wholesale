@@ -51,6 +51,15 @@ uses Conventional Commits.
 - `.claude/skills/`: `frappe-doctype`, `landed-cost-sheet`, `react-feature`.
 - `.claude/settings.json` Stop hook enforcing the cost-sheet test + typecheck.
 
+### Changed — Navigation (ERPNext-aligned, phase 1)
+- Sidebar regrouped to mirror ERPNext modules / the import→wholesale document flow, using the
+  doctype names users recognise: **Overview · Buying & Import** (Purchase Orders, Suppliers)
+  **· Inventory** (Items, Warehouse) **· Wholesale & Selling** (Sales Orders, Customers)
+  **· Accounting** (Cost Sheet, Reports — finance/admin only) **· Settings** (admin only:
+  User Management + design previews). Gating via `isAdmin` + new finance-role check
+  (`Accounts Manager`/`Accounts User`). See `PLAN_UX_ERPNEXT_WORKFLOW.md`; later phases add the
+  PO→Receipt→Shipment→LCV pipeline strip and accounting surfacing.
+
 ### Notes
 - Run `bench migrate` to install the new DocTypes before using the workflow.
 - Confirm currency convention (FCY+rate vs ETB) and optional PDF letterhead/logo.
