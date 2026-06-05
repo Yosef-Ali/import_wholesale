@@ -29,7 +29,9 @@ uses Conventional Commits.
 - **Dry-run seed** `import_tracking/demo.py` (`run_dry_run` / `teardown`).
 - **Scan extraction scaffolding**: `import_tracking/extraction/` — `field_map.json` (per-document
   label map) and `extract.py` (`apply_extracted_payload` working now; `extract_from_attachments`
-  OCR hook pending real scans).
+  OCR hook pending real scans). `anchors` pre-seeded with best-guess English + Amharic label
+  variants (155 candidates across the 8 documents) to minimise calibration when scans arrive;
+  every charge `description` still ties to `STANDARD_CHARGE_TEMPLATE`.
 - **Regression test** `import_tracking/tests/test_costsheet.py` — two scenarios (real PVC/
   blockboard sheet + a generic no-DVP, by-qty import).
 - **Admin sidebar previews**: role-gated **Admin** section in `Sidebar.tsx` linking the cost-sheet
