@@ -8,6 +8,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import ItemList from './pages/Inventory/ItemList'
 import PurchaseOrderList from './pages/ImportOrders/PurchaseOrderList'
+import CostSheetView from './pages/ImportOrders/CostSheetView'
 import SalesOrderList from './pages/Wholesale/SalesOrderList'
 import WarehouseList from './pages/Warehouse/WarehouseList'
 import Suppliers from './pages/Suppliers'
@@ -70,6 +71,8 @@ export default function App() {
             <Route path="/"               element={<Dashboard />} />
             <Route path="/inventory"      element={<ItemList />} />
             <Route path="/import-orders"  element={<PurchaseOrderList />} />
+            <Route path="/cost-sheet/:name" element={<CostSheetView />} />
+            <Route path="/cost-sheet"       element={<CostSheetView />} />
             <Route path="/wholesale"      element={<SalesOrderList />} />
             <Route path="/warehouse"      element={<WarehouseList />} />
             <Route path="/suppliers"      element={<Suppliers />} />

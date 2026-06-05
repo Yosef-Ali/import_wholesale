@@ -26,6 +26,11 @@ uses Conventional Commits.
   default company) — no hardcoded logo; styled with the app design tokens.
 - **Web data entry**: editable Cost Sheet tab (`CostSheetEditor.tsx`) with live allocation
   preview via `utils/costsheet.ts` (client mirror of the Python engine).
+- **Customer cost-sheet view** (`CostSheetView.tsx`, routes `/cost-sheet/:name` + `/cost-sheet`):
+  read-only, print-clean rendering of a shipment's cost sheet (the "what the customer sees" for
+  IMP-2025-00042) from live ERPNext data — server totals preferred, engine mirror as fallback;
+  design tokens + `fmtETB` + Print/PDF buttons. Dev mock of declaration 4-013659 added so it
+  renders offline.
 - **Dry-run seed** `import_tracking/demo.py` (`run_dry_run` / `teardown`).
 - **Scan extraction scaffolding**: `import_tracking/extraction/` — `field_map.json` (per-document
   label map) and `extract.py` (`apply_extracted_payload` working now; `extract_from_attachments`
