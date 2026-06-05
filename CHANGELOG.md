@@ -21,7 +21,9 @@ uses Conventional Commits.
 - **BuildSupply Settings** (single doctype): default company, GL accounts, allocation method,
   auto-LCV switch. One-click **Seed Import GL Accounts** (`import_tracking/setup.py`).
 - **Print format** "Import Cost Sheet" + **Print / PDF** buttons in the React shipment drawer
-  (`printViewUrl` / `pdfDownloadUrl` in `utils/format.ts`).
+  (`printViewUrl` / `pdfDownloadUrl` in `utils/format.ts`). Letterhead header pulls the company
+  name + `company_logo` from the ERPNext Company record (falls back to `BuildSupply Settings`
+  default company) — no hardcoded logo; styled with the app design tokens.
 - **Web data entry**: editable Cost Sheet tab (`CostSheetEditor.tsx`) with live allocation
   preview via `utils/costsheet.ts` (client mirror of the Python engine).
 - **Dry-run seed** `import_tracking/demo.py` (`run_dry_run` / `teardown`).
