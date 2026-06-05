@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Import Shipment — Cost Sheet Preview · BuildSupply Pro</title>
+<style>
+  :root{
+    --primary:#2563EB; --bg:#F9FAFB; --card:#FFFFFF; --fg:#111827;
+    --muted:#6B7280; --muted2:#9CA3AF; --border:#E5E7EB; --secondary:#F3F4F6;
+    --green:#059669; --red:#DC2626; --amber:#D97706;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px}
+  .mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 64px}
+
+  /* top bar */
+  .topbar{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+  .logo{width:42px;height:42px;border-radius:12px;background:var(--primary);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+  .topbar h1{font-size:18px;margin:0;font-weight:700}
+  .topbar p{margin:2px 0 0;color:var(--muted);font-size:12px}
+  .badge{margin-left:auto;font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px;
+    background:#DCFCE7;color:var(--green)}
+
+  /* workflow strip */
+  .flow{display:flex;align-items:stretch;gap:0;background:var(--card);border:1px solid var(--border);
+    border-radius:14px;padding:14px 8px;margin-bottom:22px;overflow-x:auto}
+  .step{flex:1;min-width:120px;text-align:center;padding:6px 8px;position:relative}
+  .step .n{width:26px;height:26px;border-radius:999px;background:var(--secondary);color:var(--muted);
+    font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 6px}
+  .step.active .n{background:var(--primary);color:#fff}
+  .step .t{font-size:12px;font-weight:600}
+  .step .s{font-size:11px;color:var(--muted2);margin-top:2px}
+  .step:not(:last-child)::after{content:"›";position:absolute;right:-4px;top:26px;color:var(--muted2);font-size:20px}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);margin-bottom:20px;overflow:hidden}
+  .card-h{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+  .card-h h2{margin:0;font-size:14px;font-weight:700}
+  .card-h .tag{margin-left:auto;font-size:11px;color:var(--muted)}
+  .card-b{padding:18px 20px}
+
+  /* declaration grid */
+  .decl{display:grid;grid-template-columns:1fr 1fr;gap:0 36px}
+  .decl .row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--border)}
+  .decl .row span:first-child{color:var(--muted)}
+  .decl .row span:last-child{font-weight:600;text-align:right}
+
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px 12px;text-align:left}
+  thead th{background:var(--secondary);color:var(--muted);font-size:11px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.04em}
+  tbody tr{border-top:1px solid var(--border)}
+  td.num,th.num{text-align:right}
+  tr.ded td{color:var(--red)}
+  tr.total td{background:#EFF6FF;font-weight:700;border-top:2px solid var(--primary)}
+  tr.var td{font-weight:600}
+  .grp{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;
+    background:var(--secondary);color:var(--muted)}
+
+  /* GL cards */
+  .gl{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .glc{border:1px solid var(--border);border-radius:12px;padding:14px 16px;background:#fff}
+  .glc .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .glc .acc{font-size:11px;color:var(--muted2)}
+  .glc .v{font-size:18px;font-weight:700;margin-top:6px}
+  .glc.dr{border-left:4px solid var(--primary)}
+  .glc.cr{border-left:4px solid var(--green)}
+  .note{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--primary);
+    background:#EFF6FF;padding:6px 12px;border-radius:8px;text-decoration:none}
+  .foot{font-size:11px;color:var(--muted2);text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="logo">B</div>
+    <div>
+      <h1>IMP-2025-00042 · Import Shipment</h1>
+      <p>SUQIAN PANDA INT'L TRADE — China · PVC Sheet, Laminated Blockboard</p>
+    </div>
+    <div class="badge">● Cleared</div>
+  </div>
+
+  <!-- WORKFLOW -->
+  <div class="flow">
+    <div class="step active"><div class="n">1</div><div class="t">Purchase Order</div><div class="s">PO-2025-0117</div></div>
+    <div class="step active"><div class="n">2</div><div class="t">Purchase Receipt</div><div class="s">PR-2025-0091</div></div>
+    <div class="step active"><div class="n">3</div><div class="t">Import Shipment</div><div class="s">Customs cost sheet</div></div>
+    <div class="step active"><div class="n">4</div><div class="t">Landed Cost Voucher</div><div class="s">Auto-generated</div></div>
+    <div class="step active"><div class="n">5</div><div class="t">Item Valuation</div><div class="s">GL posted</div></div>
+  </div>
+
+  <!-- DECLARATION -->
+  <div class="card">
+    <div class="card-h"><h2>Customs Declaration</h2><span class="tag">Declaration 4-013659</span></div>
+    <div class="card-b">
+      <div class="decl">
+        <div class="row"><span>Name of Tax Payer</span><span>MIHRETEAB MELKIE</span></div>
+        <div class="row"><span>Commercial Invoice</span><span>V-HY2501</span></div>
+        <div class="row"><span>TIN Number</span><span>0053323233</span></div>
+        <div class="row"><span>Bill of Lading</span><span>PENCB25004089</span></div>
+        <div class="row"><span>Bank Permit</span><span>DSB/DMB/01/03395/2025</span></div>
+        <div class="row"><span>FCY Rate</span><span class="mono">134.5121</span></div>
+        <div class="row"><span>Supplier</span><span>SUQIAN PANDA INT'L TRADE</span></div>
+        <div class="row"><span>Invoice Value (FCY)</span><span class="mono">35,144.20 USD</span></div>
+        <div class="row"><span>Country of Origin</span><span>CHINA</span></div>
+        <div class="row"><span>Customs Base Value (DVP)</span><span class="mono">11,197,355.00</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARGE LEDGER -->
+  <div class="card">
+    <div class="card-h"><h2>Customs Charge Ledger</h2><span class="tag">ETB</span></div>
+    <table>
+      <thead><tr>
+        <th style="width:38px">s/n</th><th>Description</th><th style="width:150px">Group</th>
+        <th class="num" style="width:160px">Customs Invoice Price</th>
+        <th class="num" style="width:150px">Amount in ETB</th>
+      </tr></thead>
+      <tbody id="ledger"></tbody>
+    </table>
+  </div>
+
+  <!-- GL DISTRIBUTION -->
+  <div class="card">
+    <div class="card-h"><h2>GL Distribution</h2><span class="tag">Capitalized landed cost = 14,706,242.42</span></div>
+    <div class="card-b">
+      <div class="gl">
+        <div class="glc dr"><div class="k">Debit · Purchase / Inventory</div><div class="acc">Account 5200</div><div class="v mono">14,706,242.42</div></div>
+        <div class="glc cr"><div class="k">Credit · Supplier Payable</div><div class="acc">Account 1440 · Suqian Panda</div><div class="v mono">4,727,320.14</div></div>
+        <div class="glc cr"><div class="k">Credit · Goods In Transit</div><div class="acc">Account 1420 · GIT</div><div class="v mono">5,025,731.82</div></div>
+        <div class="glc cr"><div class="k">Credit · Customs Valuation Variance</div><div class="acc">Account 2400 · CVD</div><div class="v mono">4,953,190.46</div></div>
+      </div>
+      <div class="note">
+        VAT Receivable (2,006,719.30) and Withholding (335,920.59) are recoverable / payable, so they are
+        <b>excluded</b> from item valuation. CVD = DVP − (FOB + insurance + freight + port) = 4,953,190.46.
+        Credits sum to the debit: 4,727,320.14 + 5,025,731.82 + 4,953,190.46 = <b>14,706,242.42</b> ✓
+      </div>
+      <div style="margin-top:14px"><a class="pill" href="#">⎘ Landed Cost Voucher LCV-2025-0033 — submitted</a></div>
+    </div>
+  </div>
+
+  <!-- ITEM ALLOCATION -->
+  <div class="card">
+    <div class="card-h"><h2>Item Landed Cost Allocation</h2><span class="tag">Distributed to item valuation</span></div>
+    <table>
+      <thead><tr>
+        <th>Item / Description</th><th class="num" style="width:90px">Qty</th>
+        <th class="num" style="width:150px">Unit Cost</th><th class="num" style="width:160px">Total</th>
+      </tr></thead>
+      <tbody id="alloc"></tbody>
+    </table>
+  </div>
+
+  <div class="foot">BuildSupply Pro · visual preview using the verified figures from declaration 4-013659 · numbers tie to the source sheet to the cent</div>
+</div>
+
+<script>
+  const fmt = n => n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  // [sn, desc, group, customs, etb, deduction]
+  const rows = [
+    [1,"Invoice Price (FOB)","Cost Basis",null,4727320.14,false],
+    [2,"Customs Base Value (DVP)","Cost Basis",11197355.00,null,false],
+    [3,"Insurance","Cost Basis",null,4539.12,false],
+    [4,"Service Charge On Opening CAD","Bank",184334.27,184334.27,false],
+    [5,"Postage/Swift charges/exchange","Bank",128451.41,128451.41,false],
+    [7,"Sea Freight Charge","Cost Basis",null,1230958.62,false],
+    [8,"Port Clearance charges (Djibouti)","Cost Basis",null,281346.66,false],
+    [9,"Bank Service Charge on Freight & Port","Bank",46519.16,46519.16,false],
+    [10,"Transportation Cost From Djibouti to Modjo","Freight",779934.00,779934.00,false],
+    [11,"Customs Duty Tax (15%/35%)","Duty & Tax",1787961.70,1787961.70,false],
+    [12,"Sur tax","Duty & Tax",73142.10,73142.10,false],
+    [13,"Social Welfare Tax (3%)","Duty & Tax",319666.80,319666.80,false],
+    [14,"Scanning Fee (7%)","Duty & Tax",7837.00,7837.00,false],
+    [15,"Other","Other",1175.72,1175.72,false],
+    [16,"Vat Receivable","Duty & Tax",2006719.30,2006719.30,false],
+    [17,"Withholding On Customs","Duty & Tax",335920.59,335920.59,false],
+    [18,"ESLSE Modjo Port / Terminal service","Handling",37128.95,37128.95,false],
+    [19,"Transit Cost","Freight",10000.00,10000.00,false],
+    [20,"Container Unstuffing","Handling",42000.00,42000.00,false],
+    [21,"Transportation Cost From Modjo to warehouse","Freight",76000.00,76000.00,false],
+    [22,"Demurrage","Handling",13778.58,13778.58,false],
+    [23,"Bank CPO charges","Bank",957.73,957.73,false],
+    [25,"Less: VAT Rebate","Deduction",-2006719.30,-2006719.30,true],
+    [26,"Less: Withholding Payable","Deduction",-335920.59,-335920.59,true],
+  ];
+  const lb = document.getElementById('ledger');
+  rows.forEach(r=>{
+    const tr=document.createElement('tr'); if(r[5])tr.className='ded';
+    tr.innerHTML=`<td class="mono">${r[0]}</td><td>${r[1]}</td><td><span class="grp">${r[2]}</span></td>
+      <td class="num mono">${r[3]==null?'—':fmt(r[3])}</td><td class="num mono">${r[4]==null?'—':fmt(r[4])}</td>`;
+    lb.appendChild(tr);
+  });
+  const tot=document.createElement('tr');tot.className='total';
+  tot.innerHTML=`<td></td><td>Total</td><td></td><td class="num mono">14,706,242.42</td><td class="num mono">9,753,051.96</td>`;
+  lb.appendChild(tot);
+  const va=document.createElement('tr');va.className='var';
+  va.innerHTML=`<td></td><td>Custom Valuation Variance</td><td></td><td class="num mono">4,953,190.46</td><td></td>`;
+  lb.appendChild(va);
+
+  const items=[
+    ["PVC Sheet 1220×2440×2.8mm",403,5684.92,2291022.51],
+    ["PVC Sheet 1220×2440×3.0mm",293,6103.52,1788331.83],
+    ["PVC Sheet 1220×2440×8.0mm",26,15877.17,412806.34],
+    ["Blockboard 1220×2440×18mm",1795,5233.00,9393242.10],
+    ["PVC Edge Banding",150,5472.26,820839.22],
+  ];
+  const ab=document.getElementById('alloc');
+  items.forEach(i=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${i[0]}</td><td class="num mono">${i[1]}</td><td class="num mono">${fmt(i[2])}</td><td class="num mono">${fmt(i[3])}</td>`;
+    ab.appendChild(tr);
+  });
+  const at=document.createElement('tr');at.className='total';
+  at.innerHTML=`<td>Total capitalized landed cost</td><td></td><td></td><td class="num mono">14,706,242.42</td>`;
+  ab.appendChild(at);
+</script>
+</body>
+</html>
