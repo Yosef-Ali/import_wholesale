@@ -30,6 +30,11 @@ uses Conventional Commits.
   OCR hook pending real scans).
 - **Regression test** `import_tracking/tests/test_costsheet.py` — two scenarios (real PVC/
   blockboard sheet + a generic no-DVP, by-qty import).
+- **Admin sidebar previews**: role-gated **Admin** section in `Sidebar.tsx` linking the cost-sheet
+  / print / intake HTML mockups (served from `frontend/public/`). Gating via new `roles`/`isAdmin`
+  in `authStore` + `getUserRoles()` in `api/client.ts` (reads the user's own User doc;
+  `System Manager` ⇒ admin, `Administrator` always admin). Temporary — links swap to real React
+  routes once the backend is live in production.
 
 ### Added — Agent workflow tooling
 - `CLAUDE.md` project conventions; this `CHANGELOG.md` as working memory.

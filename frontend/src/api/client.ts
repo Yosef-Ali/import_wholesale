@@ -66,6 +66,23 @@ export async function getLoggedUser(): Promise<string | null> {
   }
 }
 
+// Roles for the current user. Reads the user's own User doc (always permitted),
+// returning the role names from its `roles` child table. Never throws — auth flow
+// must not break if this call fails; callers treat an empty list as "no roles".
+export async function getUserRoles(user: string): Promise<string[]> {
+  try {
+    const res = await fetch(`${BASE}/resource/User/${encodeURIComponent(user)}`, {
+      credentials: 'include',
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const roles = data.data?.roles as { role: string }[] | undefined;
+    return roles ? roles.map((r) => r.role) : [];
+  } catch {
+    return [];
+  }
+}
+
 // ── Generic CRUD ──────────────────────────────────────────────────────
 
 export async function getList<T = Record<string, unknown>>(

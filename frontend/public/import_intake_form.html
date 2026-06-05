@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Import Cost Sheet — Customer Intake Form</title>
+<style>
+  :root{
+    --primary:#2563EB; --bg:#F9FAFB; --card:#FFFFFF; --fg:#111827;
+    --muted:#6B7280; --muted2:#9CA3AF; --border:#D1D5DB; --secondary:#F3F4F6;
+    --green:#059669; --amber:#B45309; --auto:#EFF6FF;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:13px;line-height:1.45}
+  .wrap{max-width:920px;margin:0 auto;padding:26px 20px 60px}
+  h1{font-size:20px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:12px;margin-bottom:6px}
+  .legend{display:flex;gap:18px;margin:10px 0 20px;font-size:11px;color:var(--muted)}
+  .key{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:13px;height:13px;border-radius:3px;border:1px solid var(--border)}
+  .sw.in{background:#fff}
+  .sw.auto{background:var(--auto);border-color:#bfdbfe}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:18px;overflow:hidden}
+  .card-h{padding:11px 16px;background:var(--secondary);border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:10px}
+  .card-h h2{margin:0;font-size:13px;font-weight:700}
+  .src{margin-left:auto;font-size:11px;font-weight:600;color:var(--primary);background:#EFF6FF;
+    padding:3px 9px;border-radius:999px}
+  .card-b{padding:14px 16px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+  .f{display:flex;flex-direction:column;gap:3px}
+  .f label{font-size:11px;color:var(--muted);font-weight:600}
+  .f .box{height:26px;border:1px solid var(--border);border-radius:6px;background:#fff}
+  .f.auto .box{background:var(--auto);border-style:dashed}
+  .f.auto label::after{content:" · auto";color:var(--primary);font-weight:700}
+
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{border:1px solid var(--border);padding:6px 9px;text-align:left}
+  thead th{background:var(--secondary);font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+  td.num,th.num{text-align:right}
+  .ipt{height:22px}
+  th.autoc,td.autoc{background:var(--auto)}
+  .blank{color:var(--muted2)}
+  .note{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.6}
+  .checklist{columns:2;font-size:12.5px;line-height:1.9}
+  .checklist span{display:inline-block;width:14px;height:14px;border:1.5px solid var(--muted);border-radius:3px;
+    vertical-align:-2px;margin-right:8px}
+  .foot{font-size:11px;color:var(--muted2);text-align:center;margin-top:26px}
+  @media print{body{background:#fff}.card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Import Cost Sheet — Intake Form</h1>
+  <div class="sub">Fill the white fields from your import documents. Blue dashed fields are calculated automatically by the system.</div>
+  <div class="legend">
+    <span class="key"><span class="sw in"></span> You enter</span>
+    <span class="key"><span class="sw auto"></span> Auto-calculated</span>
+  </div>
+
+  <!-- 1. DECLARATION -->
+  <div class="card">
+    <div class="card-h"><h2>1 · Declaration Header</h2><span class="src">Source: Customs Declaration</span></div>
+    <div class="card-b">
+      <div class="grid">
+        <div class="f"><label>Name of Tax Payer</label><div class="box"></div></div>
+        <div class="f"><label>Commercial Invoice No.</label><div class="box"></div></div>
+        <div class="f"><label>TIN Number</label><div class="box"></div></div>
+        <div class="f"><label>Bill of Lading No.</label><div class="box"></div></div>
+        <div class="f"><label>Declaration Number</label><div class="box"></div></div>
+        <div class="f"><label>Bank Permit Number</label><div class="box"></div></div>
+        <div class="f"><label>Supplier</label><div class="box"></div></div>
+        <div class="f"><label>Country of Origin</label><div class="box"></div></div>
+        <div class="f"><label>FCY Rate (e.g. 134.5121)</label><div class="box"></div></div>
+        <div class="f"><label>Invoice Value (FCY)</label><div class="box"></div></div>
+        <div class="f"><label>Customs Base Value (DVP)</label><div class="box"></div></div>
+        <div class="f auto"><label>CVD / Valuation Variance</label><div class="box"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. ITEMS -->
+  <div class="card">
+    <div class="card-h"><h2>2 · Item Lines &nbsp;<span style="font-weight:500;color:var(--muted)">(drives the allocation)</span></h2><span class="src">Source: Commercial Invoice + Packing List</span></div>
+    <div class="card-b">
+      <table>
+        <thead><tr>
+          <th style="width:38%">Item / Description</th>
+          <th class="num" style="width:14%">Qty</th>
+          <th class="num" style="width:18%">FOB Unit Price</th>
+          <th class="num autoc" style="width:15%">Landed Unit Cost</th>
+          <th class="num autoc" style="width:15%">Landed Total</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="ipt"></td><td class="ipt"></td><td class="ipt"></td><td class="autoc"></td><td class="autoc"></td></tr>
+          <tr><td class="ipt"></td><td class="ipt"></td><td class="ipt"></td><td class="autoc"></td><td class="autoc"></td></tr>
+          <tr><td class="ipt"></td><td class="ipt"></td><td class="ipt"></td><td class="autoc"></td><td class="autoc"></td></tr>
+          <tr><td class="ipt"></td><td class="ipt"></td><td class="ipt"></td><td class="autoc"></td><td class="autoc"></td></tr>
+          <tr><td class="ipt"></td><td class="ipt"></td><td class="ipt"></td><td class="autoc"></td><td class="autoc"></td></tr>
+          <tr><td class="ipt"></td><td class="ipt"></td><td class="ipt"></td><td class="autoc"></td><td class="autoc"></td></tr>
+        </tbody>
+      </table>
+      <div class="note">Only <b>Qty</b> and <b>FOB Unit Price</b> are needed per item. The system spreads the total
+      landed cost across items by their FOB value and fills the two blue columns — this is the table your customer wants.</div>
+    </div>
+  </div>
+
+  <!-- 3. CHARGES -->
+  <div class="card">
+    <div class="card-h"><h2>3 · Charge Amounts (ETB)</h2><span class="src">Source: Declaration · Freight · Agent · Bank · Insurance invoices</span></div>
+    <div class="card-b">
+      <table>
+        <thead><tr><th>Charge</th><th style="width:24%">Source Document</th><th class="num" style="width:26%">Amount (ETB)</th></tr></thead>
+        <tbody id="charges"></tbody>
+      </table>
+      <div class="note">Leave any line blank if it doesn't apply to this shipment. VAT Receivable and Withholding are entered
+      but automatically <b>excluded</b> from item cost (they're recoverable / payable).</div>
+    </div>
+  </div>
+
+  <!-- 4. AUTO TOTALS -->
+  <div class="card">
+    <div class="card-h"><h2>4 · Calculated Totals &amp; GL Split</h2><span class="src" style="color:var(--primary)">Auto-calculated</span></div>
+    <div class="card-b">
+      <div class="grid">
+        <div class="f auto"><label>Customs Total</label><div class="box"></div></div>
+        <div class="f auto"><label>ETB Total</label><div class="box"></div></div>
+        <div class="f auto"><label>Purchase / Inventory (5200)</label><div class="box"></div></div>
+        <div class="f auto"><label>Supplier Payable (1440)</label><div class="box"></div></div>
+        <div class="f auto"><label>Goods In Transit (1420)</label><div class="box"></div></div>
+        <div class="f auto"><label>CVD / Valuation Variance (2400)</label><div class="box"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOCS TO SCAN -->
+  <div class="card">
+    <div class="card-h"><h2>Documents to Scan (sample set)</h2></div>
+    <div class="card-b">
+      <div class="checklist">
+        <div><span></span> Commercial Invoice</div>
+        <div><span></span> Packing List</div>
+        <div><span></span> Customs Declaration / DVP sheet</div>
+        <div><span></span> Freight Invoice (B/L)</div>
+        <div><span></span> Clearing / Transitor agent invoice</div>
+        <div><span></span> Bank permit &amp; charge advice</div>
+        <div><span></span> Insurance certificate</div>
+        <div><span></span> The final cost sheet (for cross-check)</div>
+      </div>
+      <div class="note">Send one scanned set of these and the system can be tuned to read them and auto-fill sections 1–3,
+      then compute section 2's blue columns and section 4.</div>
+    </div>
+  </div>
+
+  <div class="foot">BuildSupply Pro · Import Cost Sheet intake · the only mandatory inputs for auto-allocation are item Qty + FOB Unit Price and the charge amounts</div>
+</div>
+
+<script>
+  const charges = [
+    ["Invoice Price (FOB)","Commercial Invoice"],
+    ["Insurance","Insurance Certificate"],
+    ["Sea / Air Freight","Freight Invoice"],
+    ["Port Clearance (Djibouti)","Agent Invoice"],
+    ["Service Charge on Opening CAD","Bank Advice"],
+    ["Postage / Swift / Exchange","Bank Advice"],
+    ["Bank Service Charge (Freight & Port)","Bank Advice"],
+    ["Transport: Djibouti → Modjo","Agent Invoice"],
+    ["Customs Duty (15% / 35%)","Declaration"],
+    ["Sur Tax","Declaration"],
+    ["Social Welfare Tax (3%)","Declaration"],
+    ["Scanning Fee (7%)","Declaration"],
+    ["Other","Declaration"],
+    ["VAT Receivable","Declaration"],
+    ["Withholding on Customs","Declaration"],
+    ["ESLSE Modjo Port / Terminal","Agent Invoice"],
+    ["Transit Cost","Agent Invoice"],
+    ["Container Unstuffing","Agent Invoice"],
+    ["Transport: Modjo → Warehouse","Agent Invoice"],
+    ["Demurrage","Agent Invoice"],
+    ["Bank CPO Charges","Bank Advice"],
+  ];
+  const tb=document.getElementById('charges');
+  charges.forEach(c=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${c[0]}</td><td class="blank">${c[1]}</td><td class="num">&nbsp;</td>`;
+    tb.appendChild(tr);
+  });
+</script>
+</body>
+</html>

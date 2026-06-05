@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Package, Ship, ShoppingCart,
   Warehouse as WarehouseIcon, Users, UserCheck, UserCog, BarChart3, LogOut, BookOpen,
-  ChevronDown, ChevronsUpDown,
+  ChevronDown, ChevronsUpDown, FileText, Printer, ClipboardList,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -22,6 +22,15 @@ const peopleNav = [
 
 const analyticsNav = [
   { to: '/reports', icon: BarChart3, label: 'Reports' },
+];
+
+// Admin-only design previews — static HTML mockups served from /public.
+// TODO: swap each to its real React route (e.g. /cost-sheet) once the
+// landed-cost backend is migrated to production.
+const adminNav = [
+  { href: '/import_cost_sheet_preview.html',       icon: FileText,      label: 'Cost Sheet Preview' },
+  { href: '/import_cost_sheet_print_preview.html', icon: Printer,       label: 'Cost Sheet (Print)' },
+  { href: '/import_intake_form.html',              icon: ClipboardList, label: 'Intake Form' },
 ];
 
 interface Props { onGuideOpen: () => void }
@@ -53,8 +62,23 @@ function NavItem({ to, icon: Icon, label }: { to: string; icon: typeof LayoutDas
   );
 }
 
+function ExternalItem({ href, icon: Icon, label }: { href: string; icon: typeof LayoutDashboard; label: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-3 px-4 py-2 text-[0.8125rem] font-secondary font-normal text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] rounded-md transition-colors duration-150"
+    >
+      <Icon size={16} strokeWidth={1.75} />
+      {label}
+    </a>
+  );
+}
+
 export default function Sidebar({ onGuideOpen }: Props) {
   const logout = useAuthStore((s) => s.logout);
+  const isAdmin = useAuthStore((s) => s.isAdmin);
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[280px] bg-[var(--sidebar)] flex flex-col border-r border-[var(--sidebar-border)] z-40">
@@ -83,6 +107,13 @@ export default function Sidebar({ onGuideOpen }: Props) {
 
         <SectionTitle>Analytics</SectionTitle>
         {analyticsNav.map((item) => <NavItem key={item.to} {...item} />)}
+
+        {isAdmin && (
+          <>
+            <SectionTitle>Admin</SectionTitle>
+            {adminNav.map((item) => <ExternalItem key={item.href} {...item} />)}
+          </>
+        )}
       </nav>
 
       {/* Footer */}
