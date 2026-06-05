@@ -1,0 +1,19 @@
+{
+  "doctype": "DocType",
+  "name": "Import Item Allocation",
+  "module": "Import Tracking",
+  "istable": 1,
+  "editable_grid": 1,
+  "fields": [
+    {"fieldname": "item_code", "fieldtype": "Link", "label": "Item", "options": "Item", "in_list_view": 1, "columns": 2},
+    {"fieldname": "description", "fieldtype": "Data", "label": "Description", "in_list_view": 1, "columns": 3},
+    {"fieldname": "qty", "fieldtype": "Float", "label": "Qty", "in_list_view": 1, "columns": 1, "reqd": 1},
+    {"fieldname": "weight_basis", "fieldtype": "Currency", "label": "Allocation Basis",
+      "options": "Company:company:default_currency", "in_list_view": 1, "columns": 2,
+      "description": "Value used to apportion the capitalized landed cost (defaults to line total)"},
+    {"fieldname": "landed_unit_cost", "fieldtype": "Currency", "label": "Unit Price", "read_only": 1,
+      "options": "Company:company:default_currency", "in_list_view": 1, "columns": 2},
+    {"fieldname": "landed_total", "fieldtype": "Currency", "label": "Total", "read_only": 1,
+      "options": "Company:company:default_currency", "in_list_view": 1, "columns": 2}
+  ]
+}

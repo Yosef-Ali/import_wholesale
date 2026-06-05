@@ -89,6 +89,8 @@ has_permission = {
 doctype_js = {
     "Purchase Order": "public/js/purchase_order.js",
     "Sales Order": "public/js/sales_order.js",
+    "Import Shipment": "public/js/import_shipment.js",
+    "BuildSupply Settings": "public/js/buildsupply_settings.js",
 }
 
 # ---------------------------------------------------------------------------

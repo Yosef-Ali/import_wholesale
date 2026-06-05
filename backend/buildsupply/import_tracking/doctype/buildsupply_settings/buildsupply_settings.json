@@ -1,0 +1,28 @@
+{
+  "doctype": "DocType",
+  "name": "BuildSupply Settings",
+  "module": "Import Tracking",
+  "issingle": 1,
+  "track_changes": 1,
+  "permissions": [
+    {"role": "BuildSupply Admin", "read": 1, "write": 1, "create": 1, "print": 1},
+    {"role": "Import Manager", "read": 1, "write": 1},
+    {"role": "Accountant", "read": 1, "write": 1},
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1}
+  ],
+  "fields": [
+    {"fieldname": "sec_import", "fieldtype": "Section Break", "label": "Import Landed Cost Defaults"},
+    {"fieldname": "default_company", "fieldtype": "Link", "label": "Default Company", "options": "Company"},
+    {"fieldname": "default_alloc_method", "fieldtype": "Select", "label": "Default Allocation Method",
+      "options": "Allocation Basis\nBy Qty\nBy Value", "default": "Allocation Basis"},
+    {"fieldname": "col_set1", "fieldtype": "Column Break"},
+    {"fieldname": "auto_create_lcv", "fieldtype": "Check", "label": "Auto-create Landed Cost Voucher on Submit", "default": 1},
+
+    {"fieldname": "sec_gl", "fieldtype": "Section Break", "label": "Default GL Accounts"},
+    {"fieldname": "account_purchase", "fieldtype": "Link", "label": "Purchase / Inventory Account (5200)", "options": "Account"},
+    {"fieldname": "account_supplier", "fieldtype": "Link", "label": "Supplier Payable Account (1440)", "options": "Account"},
+    {"fieldname": "col_gl2", "fieldtype": "Column Break"},
+    {"fieldname": "account_git", "fieldtype": "Link", "label": "Goods In Transit Account (1420)", "options": "Account"},
+    {"fieldname": "account_cvd", "fieldtype": "Link", "label": "CVD / Valuation Variance Account (2400)", "options": "Account"}
+  ]
+}
