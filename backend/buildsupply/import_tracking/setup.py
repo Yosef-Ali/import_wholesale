@@ -40,6 +40,14 @@ def _find_or_create_account(company, number, account_name, root_type, account_ty
     if existing:
         return existing[0].name, False
 
+    existing = frappe.get_all(
+        "Account",
+        filters={"company": company, "account_name": account_name, "is_group": 0},
+        limit=1,
+    )
+    if existing:
+        return existing[0].name, False
+
     parent = _root_group_for(company, root_type)
     if not parent:
         frappe.throw(_("No {0} group account found in the chart of accounts for {1}.")

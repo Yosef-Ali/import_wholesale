@@ -3,30 +3,39 @@
 BuildSupply Pro — Ethiopian Construction Materials Seed Data
 Run: bench --site frontend execute buildsupply.seed_data.seed
 """
+from contextlib import contextmanager
+
 import frappe
 from frappe.model.document import Document
 
 
-# ── Monkey-patch select validation (bypass strict option matching) ──────────
-_orig_validate_selects = Document._validate_selects
-Document._validate_selects = lambda self: None
+@contextmanager
+def _selects_unvalidated():
+    """Skip select-option validation while seeding; always restored, even on error.
+
+    TODO: pin down which select values actually need this and drop the bypass.
+    """
+    orig = Document._validate_selects
+    Document._validate_selects = lambda self: None
+    try:
+        yield
+    finally:
+        Document._validate_selects = orig
 
 
 def seed():
     frappe.set_user("Administrator")
 
-    _create_company()
-    _create_item_groups()
-    _create_warehouses()
-    _create_items()
-    _create_suppliers()
-    _create_customers()
-    _create_price_tiers()
+    with _selects_unvalidated():
+        _create_company()
+        _create_item_groups()
+        _create_warehouses()
+        _create_items()
+        _create_suppliers()
+        _create_customers()
+        _create_price_tiers()
 
     frappe.db.commit()
-
-    # Restore
-    Document._validate_selects = _orig_validate_selects
 
     print("\n✅ BuildSupply Pro seed data complete!")
     print("   Company:    BuildSupply Ethiopia PLC")
@@ -137,6 +146,10 @@ ITEMS = [
 ]
 
 def _create_items():
+    for uom in sorted({it["uom"] for it in ITEMS}):
+        if not frappe.db.exists("UOM", uom):
+            frappe.get_doc({"doctype": "UOM", "uom_name": uom}).insert(ignore_permissions=True)
+
     for it in ITEMS:
         if frappe.db.exists("Item", it["code"]):
             continue
@@ -166,6 +179,10 @@ SUPPLIERS = [
 ]
 
 def _create_suppliers():
+    for g in sorted({s["group"] for s in SUPPLIERS}):
+        if not frappe.db.exists("Supplier Group", g):
+            frappe.get_doc({"doctype": "Supplier Group", "supplier_group_name": g, "parent_supplier_group": "All Supplier Groups"}).insert(ignore_permissions=True)
+
     for s in SUPPLIERS:
         if frappe.db.exists("Supplier", s["name"]):
             continue

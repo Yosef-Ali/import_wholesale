@@ -18,6 +18,7 @@ import frappe
 SUPPLIER = "SUQIAN PANDA INT'L TRADE"
 ITEM_GROUP = "Products"
 WAREHOUSE_NAME = "Imports WIP"
+DECLARATION = "4-013659"
 
 ITEMS = [
     # (item_code, description, qty, fob_value_basis, fob_unit_price)
@@ -91,40 +92,48 @@ def run_dry_run():
     _ensure_supplier()
     _ensure_items()
 
-    company = (frappe.db.get_single_value("BuildSupply Settings", "default_company")
-               or frappe.defaults.get_global_default("company"))
+    existing = frappe.get_all("Import Shipment",
+                              filters={"declaration_number": DECLARATION, "docstatus": ["<", 2]},
+                              pluck="name", limit=1)
+    if existing:
+        doc = frappe.get_doc("Import Shipment", existing[0])
+        if doc.docstatus == 0:
+            doc.save(ignore_permissions=True)  # recompute draft with the current engine
+    else:
+        company = (frappe.db.get_single_value("BuildSupply Settings", "default_company")
+                   or frappe.defaults.get_global_default("company"))
 
-    doc = frappe.new_doc("Import Shipment")
-    doc.shipment_title = "DRY RUN — Suqian Panda (4-013659)"
-    doc.supplier = SUPPLIER
-    doc.status = "Cleared"
-    doc.company = company
-    doc.order_date = frappe.utils.today()
-    doc.origin_country = "China"
-    doc.tax_payer = "MIHRETEAB MELKIE"
-    doc.tin_number = "0053323233"
-    doc.declaration_number = "4-013659"
-    doc.bank_permit_number = "DSB/DMB/01/03395/2025"
-    doc.commercial_invoice_no = "V-HY2501"
-    doc.bl_number = "PENCB25004089"
-    doc.fcy_rate = 134.5121
-    doc.invoice_value_fcy = 35_144.20
-    doc.dvp_value = 11_197_355.00
-    doc.alloc_method = "Allocation Basis"
+        doc = frappe.new_doc("Import Shipment")
+        doc.shipment_title = "DRY RUN — Suqian Panda (4-013659)"
+        doc.supplier = SUPPLIER
+        doc.status = "Cleared"
+        doc.company = company
+        doc.order_date = frappe.utils.today()
+        doc.origin_country = "China"
+        doc.tax_payer = "MIHRETEAB MELKIE"
+        doc.tin_number = "0053323233"
+        doc.declaration_number = DECLARATION
+        doc.bank_permit_number = "DSB/DMB/01/03395/2025"
+        doc.commercial_invoice_no = "V-HY2501"
+        doc.bl_number = "PENCB25004089"
+        doc.fcy_rate = 134.5121
+        doc.invoice_value_fcy = 35_144.20
+        doc.dvp_value = 11_197_355.00
+        doc.alloc_method = "Allocation Basis"
 
-    for sn, desc, group, amt, is_fob, rec in CHARGES:
-        doc.append("charges", {
-            "sn": sn, "description": desc, "charge_group": group, "etb_amount": amt,
-            "customs_amount": amt, "is_fob": is_fob, "recoverable": rec,
-            "capitalize": 0 if rec else 1, "distribute": 0 if rec else 1,
-        })
+        for sn, desc, group, amt, is_fob, rec in CHARGES:
+            doc.append("charges", {
+                "sn": sn, "description": desc, "charge_group": group, "etb_amount": amt,
+                "customs_amount": amt, "is_fob": is_fob, "recoverable": rec,
+                "capitalize": 0 if rec else 1, "distribute": 0 if rec else 1,
+            })
 
-    for code, desc, qty, basis, _unit in ITEMS:
-        doc.append("item_allocation", {
-            "item_code": code, "description": desc, "qty": qty, "weight_basis": basis,
-        })
+        for code, desc, qty, basis, _unit in ITEMS:
+            doc.append("item_allocation", {
+                "item_code": code, "description": desc, "qty": qty, "weight_basis": basis,
+            })
 
-    doc.insert(ignore_permissions=True)  # triggers validate() -> compute
+        doc.insert(ignore_permissions=True)  # triggers validate() -> compute
 
     # --- assert the engine matches the source sheet ---
     failures = []
@@ -154,7 +163,7 @@ def run_dry_run():
 def teardown():
     """Remove demo shipments created by run_dry_run (does not touch masters)."""
     for name in frappe.get_all("Import Shipment",
-                               filters={"declaration_number": "4-013659"}, pluck="name"):
+                               filters={"declaration_number": DECLARATION}, pluck="name"):
         frappe.delete_doc("Import Shipment", name, force=True, ignore_permissions=True)
     frappe.db.commit()
     print("Demo shipments removed.")
