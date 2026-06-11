@@ -44,14 +44,17 @@ export default function RevenueBreakdown({ totalRevenue }: Props) {
       </div>
 
       {/* Bar Chart */}
-      <div className="flex-1 flex items-end gap-1 px-5 pb-0 mt-4">
-        {BARS.map((h, i) => (
-          <div
-            key={i}
-            className="flex-1 bg-[var(--primary)] rounded-t-sm"
-            style={{ height: `${h}px` }}
-          />
-        ))}
+      <div className="flex-1 flex items-end gap-[3px] px-5 pb-0 mt-4">
+        {BARS.map((h, i) => {
+          const max = Math.max(...BARS);
+          return (
+            <div
+              key={i}
+              className="flex-1 bg-[var(--primary)] rounded-t-full transition-opacity duration-150 hover:opacity-100"
+              style={{ height: `${h}px`, opacity: h === max ? 1 : 0.3 + (h / max) * 0.5 }}
+            />
+          );
+        })}
       </div>
 
       {/* X-axis Labels */}

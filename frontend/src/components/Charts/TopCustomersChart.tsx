@@ -96,7 +96,13 @@ export default function TopCustomersChart({ data }: Props) {
               margin={{ top: 8, right: 12, left: -18, bottom: 0 }}
               barCategoryGap="22%"
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <defs>
+                <linearGradient id="custBarFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={1} />
+                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.45} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 6" stroke="var(--border)" vertical={false} />
               <XAxis
                 dataKey="displayName"
                 tick={{ fontFamily: 'var(--font-primary)', fontSize: 9, fill: 'var(--muted-foreground)' }}
@@ -126,18 +132,19 @@ export default function TopCustomersChart({ data }: Props) {
                 yAxisId="revenue"
                 dataKey="total_revenue"
                 name="Revenue"
-                fill="var(--primary)"
-                radius={[3, 3, 0, 0]}
-                barSize={22}
-                opacity={0.9}
+                fill="url(#custBarFill)"
+                radius={[6, 6, 0, 0]}
+                barSize={26}
               />
               <Line
                 yAxisId="invoices"
+                type="monotone"
                 dataKey="invoice_count"
                 name="Invoices"
                 stroke="var(--foreground)"
                 strokeWidth={1.5}
                 strokeOpacity={0.4}
+                strokeDasharray="5 3"
                 dot={{ fill: 'var(--foreground)', r: 3, strokeWidth: 0, fillOpacity: 0.5 }}
                 activeDot={{ r: 4, fill: 'var(--foreground)', fillOpacity: 0.7 }}
               />
