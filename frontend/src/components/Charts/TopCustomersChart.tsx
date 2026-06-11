@@ -3,7 +3,7 @@ import {
   Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { MoreHorizontal, Info, Users } from 'lucide-react';
-import { fmtETBPlain, fmtETBCompact } from '../../utils/format';
+import { fmtETBPlain, fmtETBCompact, fmtCompactNum } from '../../utils/format';
 
 interface TopCustomer {
   customer: string;
@@ -22,7 +22,7 @@ function ChartTip({ active, payload, label }: any) {
   return (
     <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-3 shadow-lg font-secondary min-w-[180px]">
       <p className="text-[0.6rem] font-primary font-bold text-[var(--muted-foreground)] uppercase tracking-widest mb-2 truncate max-w-[160px]">
-        {label}
+        {payload[0]?.payload?.customer_name ?? label}
       </p>
       {payload.map((p: { name: string; value: number; color: string }, i: number) => (
         <div key={i} className="flex justify-between items-center gap-4 mt-1">
@@ -42,10 +42,14 @@ function ChartTip({ active, payload, label }: any) {
 export default function TopCustomersChart({ data }: Props) {
   const totalRevenue = data.reduce((s, c) => s + (c.total_revenue || 0), 0);
 
-  const chartData = data.map(c => ({
-    ...c,
-    displayName: c.customer_name.split(' ').slice(0, 2).join(' '),
-  }));
+  // Short single-word labels keep the angled X-axis readable; full name stays in the tooltip.
+  const chartData = data.map(c => {
+    const first = c.customer_name.split(' ')[0];
+    return {
+      ...c,
+      displayName: first.length > 12 ? first.slice(0, 12) + '…' : first,
+    };
+  });
 
   return (
     <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] flex flex-col h-[420px]">
@@ -108,7 +112,7 @@ export default function TopCustomersChart({ data }: Props) {
                 tick={{ fontFamily: 'var(--font-primary)', fontSize: 9, fill: 'var(--muted-foreground)' }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`}
+                tickFormatter={fmtCompactNum}
               />
               <YAxis
                 yAxisId="invoices"

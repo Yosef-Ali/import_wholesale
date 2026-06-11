@@ -405,11 +405,11 @@ function getDevMockData(method: string, _args?: Record<string, unknown>): any {
   }
   if (method.includes('top_customers')) {
     return [
-      { customer_name: 'Sunshine Construction', total_revenue: 5_200_000 },
-      { customer_name: 'Nile Building PLC', total_revenue: 3_800_000 },
-      { customer_name: 'Abyssinia Developers', total_revenue: 2_900_000 },
-      { customer_name: 'Meskel Construction', total_revenue: 2_100_000 },
-      { customer_name: 'Addis Real Estate', total_revenue: 1_450_000 },
+      { customer: 'CUST-0001', customer_name: 'Sunshine Construction', invoice_count: 14, total_revenue: 5_200_000 },
+      { customer: 'CUST-0002', customer_name: 'Nile Building PLC', invoice_count: 9, total_revenue: 3_800_000 },
+      { customer: 'CUST-0003', customer_name: 'Abyssinia Developers', invoice_count: 11, total_revenue: 2_900_000 },
+      { customer: 'CUST-0004', customer_name: 'Meskel Construction', invoice_count: 6, total_revenue: 2_100_000 },
+      { customer: 'CUST-0005', customer_name: 'Addis Real Estate', invoice_count: 4, total_revenue: 1_450_000 },
     ];
   }
   return {};
