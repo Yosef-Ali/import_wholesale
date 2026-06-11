@@ -103,7 +103,7 @@ export default function Reports() {
           title="Units Sold"
           value={totalQty > 0 ? totalQty.toLocaleString() : '—'}
           subtitle="Items"
-          change="+8.2% vs last period"
+          change={totalQty > 0 ? '+8.2% vs last period' : undefined}
           delay="0.08s"
           bars={[16, 24, 20, 28]}
         />
@@ -111,14 +111,14 @@ export default function Reports() {
           title="Active Customers"
           value={topCustomers.length > 0 ? topCustomers.length.toString() : '—'}
           subtitle="Customers"
-          change="Top performers"
+          change={topCustomers.length > 0 ? 'Top performers' : undefined}
           delay="0.12s"
           bars={[20, 16, 24, 20]}
         />
         <StatCard
           title="Avg Order Value"
           value={avgOrderValue > 0 ? fmtETBCompact(avgOrderValue) : '—'}
-          change="+5.1% vs last period"
+          change={avgOrderValue > 0 ? '+5.1% vs last period' : undefined}
           delay="0.16s"
           bars={[24, 20, 16, 28]}
         />
