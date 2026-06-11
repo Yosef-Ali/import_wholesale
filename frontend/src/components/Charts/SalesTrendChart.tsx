@@ -4,6 +4,7 @@ import {
 } from 'recharts';
 import { MoreHorizontal, Info } from 'lucide-react';
 import type { SalesTrend } from '../../api/types';
+import { fmtETBPlain, fmtCompactNum } from '../../utils/format';
 
 interface Props {
   data: SalesTrend[];
@@ -20,8 +21,8 @@ function ChartTip({ active, payload, label }: any) {
         <div key={i} className="flex items-center gap-2 text-sm">
           <div className="w-2 h-2 rounded-full" style={{ background: p.color }} />
           <span className="text-[var(--muted-foreground)]">{p.name}:</span>
-          <span className="font-semibold text-[var(--foreground)]">
-            {p.value >= 1000 ? `${(p.value / 1000).toFixed(0)}k` : p.value}
+          <span className="font-semibold text-[var(--foreground)] font-mono">
+            {fmtETBPlain(p.value)}
           </span>
         </div>
       ))}
@@ -30,11 +31,9 @@ function ChartTip({ active, payload, label }: any) {
 }
 
 export default function SalesTrendChart({ data, totalRevenue }: Props) {
-  // Transform data to include "new" and "existing" split
   const chartData = data.map((d) => ({
     month: d.month.slice(0, 3).toUpperCase(),
-    newUser: Math.round(d.total * 0.65),
-    existingUser: Math.round(d.total * 0.35),
+    revenue: d.total,
   }));
 
   return (
@@ -53,19 +52,13 @@ export default function SalesTrendChart({ data, totalRevenue }: Props) {
       {/* Stats row */}
       <div className="flex items-center justify-between px-5 pb-2">
         <div className="flex items-center gap-2">
-          <span className="font-secondary text-[0.8125rem] text-[var(--muted-foreground)]">Total Revenue :</span>
+          <span className="font-secondary text-[0.8125rem] text-[var(--muted-foreground)]">Total Revenue</span>
           <span className="font-secondary text-2xl font-bold text-[var(--foreground)]">{totalRevenue}</span>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-[var(--primary)]" />
-            <span className="font-primary text-[0.65rem] text-[var(--muted-foreground)] tracking-wide">NEW USER</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-[var(--muted-foreground)]" />
-            <span className="font-primary text-[0.65rem] text-[var(--muted-foreground)] tracking-wide">EXISTING USER</span>
-          </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-[var(--primary)]" />
+          <span className="font-primary text-[0.65rem] text-[var(--muted-foreground)] tracking-wide">REVENUE</span>
         </div>
 
         <div className="flex items-center bg-[var(--secondary)] rounded-full p-[3px]">
@@ -89,11 +82,10 @@ export default function SalesTrendChart({ data, totalRevenue }: Props) {
               tick={{ fontFamily: 'var(--font-primary)', fontSize: 10, fill: 'var(--muted-foreground)' }}
               axisLine={false}
               tickLine={false}
-              tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`}
+              tickFormatter={fmtCompactNum}
             />
             <Tooltip content={<ChartTip />} cursor={{ fill: 'var(--border)', opacity: 0.3 }} />
-            <Bar dataKey="newUser" name="New User" fill="var(--primary)" radius={[2, 2, 0, 0]} barSize={8} />
-            <Bar dataKey="existingUser" name="Existing User" fill="var(--primary)" opacity={0.35} radius={[2, 2, 0, 0]} barSize={8} />
+            <Bar dataKey="revenue" name="Revenue" fill="var(--primary)" radius={[3, 3, 0, 0]} barSize={18} />
           </BarChart>
         </ResponsiveContainer>
       </div>

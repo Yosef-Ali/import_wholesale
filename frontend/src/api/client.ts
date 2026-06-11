@@ -395,12 +395,12 @@ function getDevMockData(method: string, _args?: Record<string, unknown>): any {
   }
   if (method.includes('sales_trend')) {
     return [
-      { month: 'Oct', revenue: 2_100_000 },
-      { month: 'Nov', revenue: 2_450_000 },
-      { month: 'Dec', revenue: 1_900_000 },
-      { month: 'Jan', revenue: 2_800_000 },
-      { month: 'Feb', revenue: 3_100_000 },
-      { month: 'Mar', revenue: 3_250_000 },
+      { month: 'Oct', total: 2_100_000 },
+      { month: 'Nov', total: 2_450_000 },
+      { month: 'Dec', total: 1_900_000 },
+      { month: 'Jan', total: 2_800_000 },
+      { month: 'Feb', total: 3_100_000 },
+      { month: 'Mar', total: 3_250_000 },
     ];
   }
   if (method.includes('top_customers')) {

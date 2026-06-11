@@ -30,6 +30,13 @@ export function fmtETBCompact(val: number): string {
   return `ETB ${_fmtPlain.format(val)}`;
 }
 
+/** Compact number for chart axis ticks (6.0M, 320K) — ETB context comes from the card/tooltip */
+export function fmtCompactNum(val: number): string {
+  if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(1)}M`;
+  if (val >= 1_000) return `${(val / 1_000).toFixed(0)}K`;
+  return `${val}`;
+}
+
 /** Format a number as full ETB currency string */
 export function fmtETB(val: number): string {
   return _fmtCurrency.format(val);
