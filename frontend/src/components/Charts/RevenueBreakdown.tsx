@@ -12,7 +12,7 @@ export default function RevenueBreakdown({ totalRevenue }: Props) {
   const monthLong = now.toLocaleString('en', { month: 'long' });
 
   return (
-    <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] overflow-hidden flex flex-col h-[420px] w-[340px] shrink-0">
+    <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] overflow-hidden flex flex-col h-[420px] w-full xl:w-[340px] shrink-0">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-2">

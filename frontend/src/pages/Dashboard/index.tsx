@@ -68,7 +68,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Grid - 4 columns */}
-      <div className="grid grid-cols-4 gap-4 px-6 py-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-6 py-4">
         <StatCard
           title="Monthly Sales"
           value={fmtETBCompact(stats?.monthly_sales ?? 0)}
@@ -103,7 +103,7 @@ export default function Dashboard() {
       </div>
 
       {/* Charts Row */}
-      <div className="flex gap-4 px-6">
+      <div className="flex flex-col xl:flex-row gap-4 px-6">
         <div className="flex-1">
           <SalesTrendChart
             data={trend?.length ? trend : TREND_FALLBACK}

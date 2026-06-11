@@ -91,7 +91,7 @@ export default function Reports() {
       </div>
 
       {/* ── KPI Grid ── */}
-      <div className="grid grid-cols-4 gap-4 px-6 py-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-6 py-4">
         <StatCard
           title="Total Revenue"
           value={fmtETBCompact(totalRevenue || (stats?.monthly_sales ?? 0))}
@@ -125,7 +125,7 @@ export default function Reports() {
       </div>
 
       {/* ── Charts Row ── */}
-      <div className="flex gap-4 px-6 pb-6">
+      <div className="flex flex-col xl:flex-row gap-4 px-6 pb-6">
         <div className="flex-1">
           <TopItemsChart data={topItems} />
         </div>

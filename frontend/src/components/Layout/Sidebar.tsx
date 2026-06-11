@@ -51,7 +51,12 @@ const designPreviews = [
 // ERPNext finance roles that, alongside admins, may see the Accounting group.
 const FINANCE_ROLES = ['Accounts Manager', 'Accounts User'];
 
-interface Props { onGuideOpen: () => void }
+interface Props {
+  onGuideOpen: () => void;
+  /** Mobile drawer state — ignored at lg+ where the sidebar is always visible. */
+  open: boolean;
+  onClose: () => void;
+}
 
 function SectionTitle({ children }: { children: string }) {
   return (
@@ -94,7 +99,7 @@ function ExternalItem({ href, icon: Icon, label }: { href: string; icon: typeof 
   );
 }
 
-export default function Sidebar({ onGuideOpen }: Props) {
+export default function Sidebar({ onGuideOpen, open, onClose }: Props) {
   const logout = useAuthStore((s) => s.logout);
   const isAdmin = useAuthStore((s) => s.isAdmin);
   const roles = useAuthStore((s) => s.roles);
@@ -104,7 +109,9 @@ export default function Sidebar({ onGuideOpen }: Props) {
   const isFinance = isAdmin || roles.some((r) => FINANCE_ROLES.includes(r));
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-[280px] bg-[var(--sidebar)] flex flex-col border-r border-[var(--sidebar-border)] z-40">
+    <aside
+      className={`fixed left-0 top-0 h-screen w-[280px] bg-[var(--sidebar)] flex flex-col border-r border-[var(--sidebar-border)] z-50 transition-transform duration-200 ease-out lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}
+    >
 
       {/* Header */}
       <div className="flex items-center justify-between gap-3 p-4 border-b border-[var(--sidebar-border)]">
@@ -120,8 +127,8 @@ export default function Sidebar({ onGuideOpen }: Props) {
         <ChevronsUpDown size={18} className="text-[var(--muted-foreground)] shrink-0" />
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-4">
+      {/* Navigation — clicking a link closes the mobile drawer (no-op at lg+) */}
+      <nav className="flex-1 overflow-y-auto px-4" onClick={onClose}>
         <SectionTitle>Overview</SectionTitle>
         {overviewNav.map((item) => <NavItem key={item.to} {...item} />)}
 
