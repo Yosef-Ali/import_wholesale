@@ -26,7 +26,7 @@ export default function RevenueBreakdown({ totalRevenue }: Props) {
 
       {/* Content */}
       <div className="flex flex-col gap-1 px-5">
-        <span className="font-secondary text-[0.8125rem] text-[var(--muted-foreground)]">Revenue by Category</span>
+        <span className="font-secondary text-[0.8125rem] text-[var(--muted-foreground)]">Daily revenue this month</span>
         <div className="flex items-center justify-between">
           <span className="font-secondary text-[1.75rem] font-bold text-[var(--foreground)]">{totalRevenue}</span>
           <div className="flex items-center gap-1.5 border border-[var(--border)] rounded-full px-2.5 py-1.5">
