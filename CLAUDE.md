@@ -41,10 +41,10 @@ deploy/     VPS deploy scripts and prod compose/env
 - `src/stores/` — Zustand stores (e.g. `authStore`, `toastStore` with a `toast` helper).
 - `src/utils/` — formatting/helpers (`fmtETB`, `erpnextUrl`, `printViewUrl`, `pdfDownloadUrl`).
 - Styling: Tailwind utilities + CSS-variable design tokens. Use the tokens, don't hardcode hex.
-  Tokens (also in `PLAN.md`): `--primary` `#2563EB`, page bg `#F9FAFB`, card `#FFFFFF`,
-  text `#111827`/`#6B7280`/`#9CA3AF`, border `#E5E7EB`; status green `#059669`, red `#DC2626`,
-  amber `#D97706`. One font (Inter); JetBrains Mono only for currency cells (`font-mono`).
-- Icons: `lucide-react`. Currency: always `fmtETB(...)`.
+  **The design system is documented in `DESIGN.md`** (dark-first, `--primary #FF8400` orange,
+  Geist UI font + JetBrains Mono labels/currency; tokens in `frontend/src/index.css`).
+  Note: older references to blue `#2563EB`/Inter (e.g. in `PLAN.md`) are stale.
+- Icons: `lucide-react`. Currency: always `fmtETB(...)` (axis ticks: `fmtCompactNum`).
 
 ## Commands
 
