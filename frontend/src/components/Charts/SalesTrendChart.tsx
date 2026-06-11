@@ -1,5 +1,5 @@
 import {
-  BarChart, Bar, XAxis, YAxis,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { MoreHorizontal, Info } from 'lucide-react';
@@ -71,12 +71,21 @@ export default function SalesTrendChart({ data, totalRevenue }: Props) {
       {/* Chart */}
       <div className="flex-1 px-5 pb-4">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 8, right: 0, left: -16, bottom: 0 }} barGap={2} barCategoryGap="20%">
+          <AreaChart data={chartData} margin={{ top: 12, right: 8, left: -16, bottom: 0 }}>
+            <defs>
+              <linearGradient id="salesTrendFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.32} />
+                <stop offset="70%" stopColor="var(--primary)" stopOpacity={0.06} />
+                <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 6" stroke="var(--border)" vertical={false} />
             <XAxis
               dataKey="month"
               tick={{ fontFamily: 'var(--font-primary)', fontSize: 10, fill: 'var(--muted-foreground)' }}
               axisLine={false}
               tickLine={false}
+              dy={6}
             />
             <YAxis
               tick={{ fontFamily: 'var(--font-primary)', fontSize: 10, fill: 'var(--muted-foreground)' }}
@@ -84,9 +93,21 @@ export default function SalesTrendChart({ data, totalRevenue }: Props) {
               tickLine={false}
               tickFormatter={fmtCompactNum}
             />
-            <Tooltip content={<ChartTip />} cursor={{ fill: 'var(--border)', opacity: 0.3 }} />
-            <Bar dataKey="revenue" name="Revenue" fill="var(--primary)" radius={[3, 3, 0, 0]} barSize={18} />
-          </BarChart>
+            <Tooltip
+              content={<ChartTip />}
+              cursor={{ stroke: 'var(--primary)', strokeWidth: 1, strokeDasharray: '4 4', strokeOpacity: 0.5 }}
+            />
+            <Area
+              type="monotone"
+              dataKey="revenue"
+              name="Revenue"
+              stroke="var(--primary)"
+              strokeWidth={2.5}
+              fill="url(#salesTrendFill)"
+              dot={false}
+              activeDot={{ r: 5, fill: 'var(--primary)', stroke: 'var(--card)', strokeWidth: 2 }}
+            />
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     </div>
