@@ -7,6 +7,10 @@ interface Props {
 const BARS = [60, 80, 50, 100, 70, 120, 90, 110, 65, 85, 55, 95, 75, 45, 105, 68, 88, 72, 58, 42];
 
 export default function RevenueBreakdown({ totalRevenue }: Props) {
+  const now = new Date();
+  const monthShort = now.toLocaleString('en', { month: 'short' }).toUpperCase();
+  const monthLong = now.toLocaleString('en', { month: 'long' });
+
   return (
     <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] overflow-hidden flex flex-col h-[420px] w-[340px] shrink-0">
       {/* Header */}
@@ -27,7 +31,7 @@ export default function RevenueBreakdown({ totalRevenue }: Props) {
           <span className="font-secondary text-[1.75rem] font-bold text-[var(--foreground)]">{totalRevenue}</span>
           <div className="flex items-center gap-1.5 border border-[var(--border)] rounded-full px-2.5 py-1.5">
             <Calendar size={12} className="text-[var(--muted-foreground)]" />
-            <span className="font-secondary text-[0.65rem] text-[var(--foreground)]">Jan 1 - Aug 30</span>
+            <span className="font-secondary text-[0.65rem] text-[var(--foreground)]">{monthLong} {now.getFullYear()}</span>
           </div>
         </div>
       </div>
@@ -52,8 +56,8 @@ export default function RevenueBreakdown({ totalRevenue }: Props) {
 
       {/* X-axis Labels */}
       <div className="flex items-center justify-between px-5 py-3">
-        <span className="font-primary text-[0.5625rem] text-[var(--muted-foreground)]">1 JAN</span>
-        <span className="font-primary text-[0.5625rem] text-[var(--muted-foreground)]">30 JAN 2025</span>
+        <span className="font-primary text-[0.5625rem] text-[var(--muted-foreground)]">1 {monthShort}</span>
+        <span className="font-primary text-[0.5625rem] text-[var(--muted-foreground)]">30 {monthShort} {now.getFullYear()}</span>
       </div>
     </div>
   );

@@ -81,7 +81,7 @@ export default function Reports() {
           </div>
           <div className="flex items-center gap-2 bg-[var(--secondary)] rounded-full px-3 py-2">
             <Calendar size={14} className="text-[var(--muted-foreground)]" />
-            <span className="font-secondary text-sm text-[var(--foreground)]">2025</span>
+            <span className="font-secondary text-sm text-[var(--foreground)]">{new Date().getFullYear()}</span>
           </div>
           <button className="flex items-center gap-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full px-4 py-2 font-primary text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity">
             <Download size={14} />
