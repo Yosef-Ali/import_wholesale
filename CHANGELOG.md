@@ -7,6 +7,38 @@ uses Conventional Commits.
 
 ## [Unreleased]
 
+### Changed — Design review + chart modernization (2026-06-11)
+- **Charts fixed and modernized** (`components/Charts/`): Sales Trend is a gradient area
+  curve (was broken — NaN tooltips from a mock/type field mismatch, plus "New User/Existing
+  User" template residue); Top Items renders ranked progress bars on tracks; Top Customers
+  gets readable axes (`fmtCompactNum` ticks, truncated labels, full name in tooltip) and a
+  dashed invoices curve; Revenue Breakdown sparkbars grade by value with the peak highlighted.
+  New helper `fmtCompactNum` in `utils/format.ts`. **Rule:** mock data field names in
+  `api/client.ts` must match the TS types — recharts silently renders nothing on a missing
+  `dataKey`.
+- **Responsive layout**: below `lg` the sidebar is an off-canvas drawer (hamburger + backdrop);
+  KPI grids go 2-col, chart rows stack below `xl`. The SPA is now usable on phones.
+- **Honest states**: stock pill derives from displayed qty (qty-0 no longer "In Stock");
+  KPI deltas hidden when the value is missing; dates derive from the clock (no more 2025);
+  sidebar chip shows the real signed-in user.
+- **`/cost-sheet` defaults to the latest shipment** (was hardcoded to dev-era
+  `IMP-2025-00042`, which 404'd on live sites); friendly empty state when none exist.
+- **DESIGN.md added** — the real design system (dark-first, `--primary #FF8400`, Geist +
+  JetBrains Mono, chart house style, breakpoints). CLAUDE.md's stale blue/Inter tokens now
+  point there.
+
+### Fixed — Seed & local stack (2026-06-11)
+- `seed_data.py`: select-validation bypass scoped with try/finally (was leaking process-wide
+  on error); ensures UOMs, Supplier Groups, and the Transit Warehouse Type before inserts.
+- `demo.run_dry_run()` is actually idempotent (reuses the shipment for declaration 4-013659).
+- `setup.seed_import_accounts` falls back to account-name reuse as documented.
+- Compose `create-site`: newline-safe `apps.txt` append (fixes the `erpnextbuildsupply`
+  migrate crash on stale sites volumes).
+- Local-stack note: fresh sites skip the wizard, so set `System Settings.language` (the seed
+  flow now does) — frappe v16's `locale.py:get_locale_value` raises `UnboundLocalError` on
+  document updates when no language is set (upstream bug; also breaks
+  `install_fixtures.install`).
+
 ### Added — Import landed-cost workflow (ERPNext-native)
 - **Import Shipment** expanded into a full Ethiopian customs cost sheet: declaration header
   (TIN, declaration no., bank permit, FCY rate, DVP), a `charges` child table

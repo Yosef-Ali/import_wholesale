@@ -26,6 +26,7 @@ def _selects_unvalidated():
 def seed():
     frappe.set_user("Administrator")
 
+    _ensure_locale()
     with _selects_unvalidated():
         _create_company()
         _create_item_groups()
@@ -45,6 +46,17 @@ def seed():
     print("   Customers:  8 Ethiopian wholesalers")
     print("   ERPNext:    http://localhost:8081  (admin / admin)")
     print("   React UI:   http://localhost:3000")
+
+
+def _ensure_locale():
+    """Fresh sites skip the setup wizard; without System Settings.language,
+    frappe v16's get_locale_value raises UnboundLocalError on any document
+    update (locale.py:52 — `value` unbound when frappe.local.lang is None)."""
+    ss = frappe.get_single("System Settings")
+    if not ss.language:
+        ss.language = "en"
+        ss.flags.ignore_mandatory = True
+        ss.save(ignore_permissions=True)
 
 
 # ── Company ────────────────────────────────────────────────────────────────
