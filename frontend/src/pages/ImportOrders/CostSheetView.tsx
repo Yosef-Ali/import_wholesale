@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2, Printer, Download, FileText } from 'lucide-react';
-import { useImportShipment } from '../../api/hooks/useOrders';
+import { useImportShipment, useImportShipments } from '../../api/hooks/useOrders';
 import { computeCostsheet } from '../../utils/costsheet';
 import { fmtETB, printViewUrl, pdfDownloadUrl } from '../../utils/format';
 import type { ImportChargeLine, ImportItemAllocation } from '../../api/types';
@@ -14,9 +14,13 @@ import type { ImportChargeLine, ImportItemAllocation } from '../../api/types';
  */
 export default function CostSheetView({ name: nameProp }: { name?: string }) {
   const params = useParams();
-  const name = nameProp || params.name || 'IMP-2025-00042';
+  const explicit = nameProp || params.name || null;
+  // No shipment specified (bare /cost-sheet) → show the most recent one.
+  const { data: shipments, isLoading: listLoading } = useImportShipments();
+  const name = explicit || shipments?.[0]?.name || null;
 
-  const { data: doc, isLoading } = useImportShipment(name);
+  const { data: doc, isLoading: docLoading } = useImportShipment(name);
+  const isLoading = docLoading || (!explicit && listLoading);
 
   const charges: ImportChargeLine[] = doc?.charges || [];
   const items: ImportItemAllocation[] = doc?.item_allocation || [];
@@ -38,7 +42,8 @@ export default function CostSheetView({ name: nameProp }: { name?: string }) {
   if (!doc) {
     return (
       <div className="flex items-center justify-center h-64 text-[var(--muted-foreground)]">
-        <FileText size={18} className="mr-2" /> Shipment {name} not found.
+        <FileText size={18} className="mr-2" />
+        {name ? `Shipment ${name} not found.` : 'No import shipments yet — create one from Purchase Orders.'}
       </div>
     );
   }
