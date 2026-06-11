@@ -52,6 +52,10 @@ def seed():
 def _create_company():
     if frappe.db.exists("Company", "BuildSupply Ethiopia PLC"):
         return
+    # Company creation auto-creates default warehouses, one of which links to the
+    # "Transit" warehouse type — only the setup wizard normally creates it.
+    if not frappe.db.exists("Warehouse Type", "Transit"):
+        frappe.get_doc({"doctype": "Warehouse Type", "__newname": "Transit"}).insert(ignore_permissions=True)
     doc = frappe.get_doc({
         "doctype": "Company",
         "company_name": "BuildSupply Ethiopia PLC",
