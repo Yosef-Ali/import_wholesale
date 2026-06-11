@@ -385,12 +385,12 @@ function getDevMockData(method: string, _args?: Record<string, unknown>): any {
   }
   if (method.includes('top_items')) {
     return [
-      { item_name: 'Deformed Rebar 16mm', item_code: 'STL-RB-16', total_revenue: 4_500_000 },
-      { item_name: 'Portland Cement 50kg', item_code: 'CMT-PC-50', total_revenue: 3_200_000 },
-      { item_name: 'Corrugated Iron Sheet', item_code: 'STL-CI-28', total_revenue: 2_800_000 },
-      { item_name: 'Ceramic Floor Tile 40x40', item_code: 'TIL-CF-40', total_revenue: 2_100_000 },
-      { item_name: 'PVC Pipe 4" x 6m', item_code: 'PIP-PV-4', total_revenue: 1_600_000 },
-      { item_name: 'Exterior Wall Paint 20L', item_code: 'PNT-EW-20', total_revenue: 980_000 },
+      { item_name: 'Deformed Rebar 16mm', item_code: 'STL-RB-16', total_qty: 3750, total_amount: 4_500_000 },
+      { item_name: 'Portland Cement 50kg', item_code: 'CMT-PC-50', total_qty: 5520, total_amount: 3_200_000 },
+      { item_name: 'Corrugated Iron Sheet', item_code: 'STL-CI-28', total_qty: 4000, total_amount: 2_800_000 },
+      { item_name: 'Ceramic Floor Tile 40x40', item_code: 'TIL-CF-40', total_qty: 5250, total_amount: 2_100_000 },
+      { item_name: 'PVC Pipe 4" x 6m', item_code: 'PIP-PV-4', total_qty: 2670, total_amount: 1_600_000 },
+      { item_name: 'Exterior Wall Paint 20L', item_code: 'PNT-EW-20', total_qty: 306, total_amount: 980_000 },
     ];
   }
   if (method.includes('sales_trend')) {
