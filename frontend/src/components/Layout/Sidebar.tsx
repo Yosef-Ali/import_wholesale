@@ -98,6 +98,9 @@ export default function Sidebar({ onGuideOpen }: Props) {
   const logout = useAuthStore((s) => s.logout);
   const isAdmin = useAuthStore((s) => s.isAdmin);
   const roles = useAuthStore((s) => s.roles);
+  const user = useAuthStore((s) => s.user);
+  const displayName = user || 'Guest';
+  const initials = displayName.slice(0, 2).toUpperCase();
   const isFinance = isAdmin || roles.some((r) => FINANCE_ROLES.includes(r));
 
   return (
@@ -168,11 +171,11 @@ export default function Sidebar({ onGuideOpen }: Props) {
       {/* User Profile */}
       <div className="flex items-center gap-3 p-4 border-t border-[var(--sidebar-border)]">
         <div className="w-9 h-9 bg-[var(--secondary)] rounded-full flex items-center justify-center shrink-0">
-          <span className="font-secondary text-xs font-medium text-[var(--foreground)]">SP</span>
+          <span className="font-secondary text-xs font-medium text-[var(--foreground)]">{initials}</span>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-secondary text-sm font-medium text-[var(--sidebar-accent-foreground)] truncate">Salung Prastyo</div>
-          <div className="font-secondary text-xs text-[var(--muted-foreground)]">Pro Plan</div>
+          <div className="font-secondary text-sm font-medium text-[var(--sidebar-accent-foreground)] truncate">{displayName}</div>
+          <div className="font-secondary text-xs text-[var(--muted-foreground)]">{isAdmin ? 'Administrator' : roles[0] || 'User'}</div>
         </div>
         <ChevronDown size={18} className="text-[var(--muted-foreground)] shrink-0" />
       </div>
