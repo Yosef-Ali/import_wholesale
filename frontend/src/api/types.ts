@@ -139,6 +139,62 @@ export interface ImportItemAllocation {
   landed_total?: number;
 }
 
+// ── Import intake (hard-copy document → cost sheet) ─────────────────
+// Mirrors backend extraction/field_map.json served by get_extraction_schema.
+
+export interface ExtractionHeaderField {
+  target: string;
+  anchors?: string[];
+}
+
+export interface ExtractionChargeLine {
+  description: string;
+  charge_group: string;
+  anchors?: string[];
+}
+
+export interface ExtractionDocument {
+  doc_type: string;
+  label: string;
+  primary?: boolean;
+  header_fields?: ExtractionHeaderField[];
+  charge_lines?: ExtractionChargeLine[];
+  line_items?: { target_table: string; note?: string };
+}
+
+export interface ExtractionSchema {
+  documents: ExtractionDocument[];
+}
+
+/** Payload accepted by buildsupply...extraction.extract.apply_extracted_payload */
+export interface IntakePayload {
+  header: Record<string, string | number>;
+  charges: Array<{
+    sn?: number;
+    description: string;
+    charge_group: string;
+    etb_amount: number;
+    customs_amount?: number;
+    is_fob?: boolean;
+    recoverable?: boolean;
+  }>;
+  items: Array<{
+    item_code?: string;
+    description: string;
+    qty: number;
+    fob_unit_price?: number;
+    weight_basis?: number;
+  }>;
+}
+
+export interface IntakeResult {
+  shipment: string;
+  purchase_total: number;
+  supplier_payable?: number;
+  git_amount?: number;
+  cvd_amount?: number;
+}
+
 export interface Warehouse {
   name: string;
   warehouse_name: string;

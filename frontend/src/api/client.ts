@@ -403,6 +403,66 @@ function getDevMockData(method: string, _args?: Record<string, unknown>): any {
       { month: 'Mar', total: 3_250_000 },
     ];
   }
+  if (method.includes('get_extraction_schema')) {
+    // Trimmed mirror of backend extraction/field_map.json (intake page preview).
+    return {
+      documents: [
+        { doc_type: 'commercial_invoice', label: 'Commercial Invoice', primary: true,
+          header_fields: [
+            { target: 'commercial_invoice_no', anchors: ['Invoice No', 'CI No'] },
+            { target: 'supplier', anchors: ['Seller', 'Exporter'] },
+            { target: 'invoice_value_fcy', anchors: ['FOB Total', 'Grand Total'] },
+            { target: 'origin_country', anchors: ['Country of Origin'] },
+          ],
+          line_items: { target_table: 'item_allocation' } },
+        { doc_type: 'packing_list', label: 'Packing List', line_items: { target_table: 'item_allocation' } },
+        { doc_type: 'customs_declaration', label: 'Customs Declaration / DVP sheet',
+          header_fields: [
+            { target: 'declaration_number', anchors: ['Declaration No'] },
+            { target: 'tin_number', anchors: ['TIN'] },
+            { target: 'tax_payer', anchors: ['Tax Payer'] },
+            { target: 'dvp_value', anchors: ['DVP', 'Customs Value'] },
+          ],
+          charge_lines: [
+            { description: 'Customs Duty Tax (15%/35%)', charge_group: 'Duty & Tax' },
+            { description: 'Sur tax', charge_group: 'Duty & Tax' },
+            { description: 'Social Welfare Tax (3%)', charge_group: 'Duty & Tax' },
+            { description: 'Scanning Fee (7%)', charge_group: 'Duty & Tax' },
+            { description: 'Vat Receivable', charge_group: 'Duty & Tax' },
+            { description: 'Withholding On Customs', charge_group: 'Duty & Tax' },
+          ] },
+        { doc_type: 'freight_invoice', label: 'Freight Invoice',
+          header_fields: [{ target: 'bl_number', anchors: ['B/L No'] }],
+          charge_lines: [{ description: 'Sea Freight Charge', charge_group: 'Cost Basis' }] },
+        { doc_type: 'clearing_agent_invoice', label: 'Clearing / Transitor Agent Invoice',
+          charge_lines: [
+            { description: 'Port Clearance charges (Djibouti)', charge_group: 'Cost Basis' },
+            { description: 'Transportation Cost From Djibouti to Modjo', charge_group: 'Freight & Logistics' },
+            { description: 'ESLSE Modjo Port/Terminal service', charge_group: 'Handling' },
+            { description: 'Transit Cost', charge_group: 'Freight & Logistics' },
+            { description: 'Container Unstuffing', charge_group: 'Handling' },
+            { description: 'Transportation Cost From Modjo to warehouse', charge_group: 'Freight & Logistics' },
+            { description: 'Demurrage', charge_group: 'Handling' },
+          ] },
+        { doc_type: 'bank_advice', label: 'Bank Permit & Charge Advice',
+          header_fields: [
+            { target: 'bank_permit_number', anchors: ['Permit No'] },
+            { target: 'fcy_rate', anchors: ['Rate', 'Exchange Rate'] },
+          ],
+          charge_lines: [
+            { description: 'Service Charge On Opening CAD', charge_group: 'Bank' },
+            { description: 'Postage/Swift charges/exchange', charge_group: 'Bank' },
+            { description: 'Bank Service Charge on Freight & Port', charge_group: 'Bank' },
+            { description: 'Bank CPO charges', charge_group: 'Bank' },
+          ] },
+        { doc_type: 'insurance_certificate', label: 'Insurance Certificate',
+          charge_lines: [{ description: 'Insurance', charge_group: 'Cost Basis' }] },
+      ],
+    };
+  }
+  if (method.includes('apply_extracted_payload')) {
+    return { shipment: 'IMP-2026-MOCK1', purchase_total: 14_706_242.42 };
+  }
   if (method.includes('top_customers')) {
     return [
       { customer: 'CUST-0001', customer_name: 'Sunshine Construction', invoice_count: 14, total_revenue: 5_200_000 },

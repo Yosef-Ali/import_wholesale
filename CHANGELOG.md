@@ -7,6 +7,18 @@ uses Conventional Commits.
 
 ## [Unreleased]
 
+### Added — Shipment Intake page (2026-06-12)
+- **/intake**: real React intake form replacing the static `import_intake_form.html` mockup.
+  One screen in hard-copy paper order — Commercial Invoice (+item lines), Packing List
+  (cross-check), Customs Declaration/DVP, Freight Invoice, Clearing/Transitor, Bank Permit,
+  Insurance — driven by the backend `get_extraction_schema` (field_map.json), so document
+  sections/fields stay in sync with the OCR map. FOB ETB derives from FCY × permit rate;
+  VAT/WHT deduction mirrors auto-added; live GL preview via the `costsheet.ts` engine
+  mirror; saves through `apply_extracted_payload` and opens the resulting cost sheet.
+  Workflow strip mirrors the ERPNext chain: PO → Intake → Cost Sheet → Submit (LCV) →
+  Purchase Receipt. Sidebar: "Shipment Intake" under Buying & Import (static mockup link
+  removed per the migration TODO).
+
 ### Changed — Design review + chart modernization (2026-06-11)
 - **Charts fixed and modernized** (`components/Charts/`): Sales Trend is a gradient area
   curve (was broken — NaN tooltips from a mock/type field mismatch, plus "New User/Existing

@@ -15,6 +15,7 @@ const overviewNav = [
 
 const buyingNav = [
   { to: '/import-orders', icon: Ship,            label: 'Purchase Orders' },
+  { to: '/intake',        icon: ClipboardList,   label: 'Shipment Intake' },
   { to: '/suppliers',     icon: UserCheck,       label: 'Suppliers' },
 ];
 
@@ -42,10 +43,10 @@ const settingsNav = [
 // Admin-only design previews — static HTML mockups served from /public.
 // TODO: swap each to its real React route (e.g. /cost-sheet) once the
 // landed-cost backend is migrated to production.
+// (Intake Form migrated → /intake, see buyingNav.)
 const designPreviews = [
   { href: '/import_cost_sheet_preview.html',       icon: FileText,      label: 'Cost Sheet Preview' },
   { href: '/import_cost_sheet_print_preview.html', icon: Printer,       label: 'Cost Sheet (Print)' },
-  { href: '/import_intake_form.html',              icon: ClipboardList, label: 'Intake Form' },
 ];
 
 // ERPNext finance roles that, alongside admins, may see the Accounting group.
