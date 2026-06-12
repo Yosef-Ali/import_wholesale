@@ -443,6 +443,7 @@ function getDevMockData(method: string, _args?: Record<string, unknown>): any {
             { description: 'Container Unstuffing', charge_group: 'Handling' },
             { description: 'Transportation Cost From Modjo to warehouse', charge_group: 'Freight & Logistics' },
             { description: 'Demurrage', charge_group: 'Handling' },
+            { description: 'Other', charge_group: 'Other' },
           ] },
         { doc_type: 'bank_advice', label: 'Bank Permit & Charge Advice',
           header_fields: [
