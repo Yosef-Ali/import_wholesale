@@ -63,6 +63,7 @@ def apply_extracted_payload(payload, shipment=None):
     payload = _coerce_payload(payload)
     header = payload.get("header") or {}
 
+    is_new = not shipment
     doc = (frappe.get_doc("Import Shipment", shipment)
            if shipment else frappe.new_doc("Import Shipment"))
 
@@ -71,7 +72,9 @@ def apply_extracted_payload(payload, shipment=None):
             doc.set(key, val)
     if not doc.get("shipment_title"):
         doc.shipment_title = header.get("supplier") or "Imported Shipment"
-    if not doc.get("status"):
+    # Intake happens when documents are in hand, i.e. at customs — the doctype
+    # default ("Ordered") pre-fills status, so an emptiness check never fires.
+    if is_new:
         doc.status = "Customs Clearance"
     if not doc.get("order_date"):
         doc.order_date = frappe.utils.today()
