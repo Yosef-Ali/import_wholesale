@@ -66,7 +66,8 @@ def apply_standard_template(shipment, overwrite=0):
         row.setdefault("capitalize", 1)
         row.setdefault("distribute", 1)
         doc.append("charges", row)
-    doc.save(ignore_permissions=True)
+    # Whitelisted entry point — let Frappe enforce Import Shipment write permission.
+    doc.save()
     return {"applied": len(STANDARD_CHARGE_TEMPLATE)}
 
 

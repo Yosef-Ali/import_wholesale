@@ -105,7 +105,8 @@ def apply_extracted_payload(payload, shipment=None):
                 "weight_basis": frappe.utils.flt(basis),
             })
 
-    doc.save(ignore_permissions=True)
+    # Whitelisted entry point — let Frappe enforce Import Shipment create/write permission.
+    doc.save()
     frappe.db.commit()
     return {"shipment": doc.name, "purchase_total": doc.purchase_total,
             "message": _("Shipment {0} populated from extracted data.").format(doc.name)}
