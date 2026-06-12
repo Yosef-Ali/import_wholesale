@@ -48,6 +48,10 @@ case "$COMPONENT" in
     docker compose -p "$PROJECT" build backend
     echo "==> Restarting backend services..."
     docker compose -p "$PROJECT" up -d --no-deps backend websocket queue-short queue-long scheduler
+    # Recreated backend gets a new container IP; the long-lived nginx caches the
+    # old one and serves 502s until restarted.
+    echo "==> Restarting nginx (refresh backend upstream IP)..."
+    docker compose -p "$PROJECT" restart frontend
     ;;
   *)
     echo "Unknown component: $COMPONENT"
