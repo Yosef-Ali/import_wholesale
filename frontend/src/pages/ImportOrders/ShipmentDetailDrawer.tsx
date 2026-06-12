@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Anchor, ExternalLink, Loader2, Edit2, Check, X } from 'lucide-react';
+import { Anchor, ExternalLink, Loader2, Edit2, Check, X, Printer, Download } from 'lucide-react';
 import { useImportShipment, useUpdateShipment } from '../../api/hooks/useOrders';
 import { toast } from '../../stores/toastStore';
-import { fmtETB, erpnextUrl } from '../../utils/format';
+import { fmtETB, erpnextUrl, printViewUrl, pdfDownloadUrl } from '../../utils/format';
 import { drawerEditClass as inputClass, drawerLabelClass as labelClass } from '../../utils/styles';
 import { Stat } from '../../components/ui/Badge';
+import CostSheetEditor from './CostSheetEditor';
 
 interface Props { editName: string; onClose: () => void }
 
@@ -18,7 +19,7 @@ const SHIPPING_METHODS = [
   'Sea Freight (FCL)', 'Sea Freight (LCL)', 'Air Freight', 'Land Transport', 'Multimodal',
 ];
 
-type Tab = 'details' | 'timeline' | 'cost';
+type Tab = 'details' | 'timeline' | 'cost' | 'costsheet';
 
 export default function ShipmentDetailDrawer({ editName, onClose }: Props) {
   const { data: item, isLoading } = useImportShipment(editName);
@@ -45,6 +46,7 @@ export default function ShipmentDetailDrawer({ editName, onClose }: Props) {
     { id: 'details', label: 'Details' },
     { id: 'timeline', label: 'Dates' },
     { id: 'cost', label: 'Costing' },
+    { id: 'costsheet', label: 'Cost Sheet' },
   ];
 
   return (
@@ -252,6 +254,109 @@ export default function ShipmentDetailDrawer({ editName, onClose }: Props) {
                 )
               )}
 
+              {activeTab === 'costsheet' && isEditing && (
+                <div className="col-span-2">
+                  <CostSheetEditor form={form} setForm={setForm} />
+                </div>
+              )}
+
+              {activeTab === 'costsheet' && !isEditing && (
+                <div className="col-span-2 space-y-5">
+                  {/* Declaration header */}
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs font-secondary">
+                    {[
+                      ['Tax Payer', item.tax_payer],
+                      ['TIN', item.tin_number],
+                      ['Declaration No.', item.declaration_number],
+                      ['Bank Permit', item.bank_permit_number],
+                      ['Commercial Invoice', item.commercial_invoice_no],
+                      ['Bill of Lading', item.bl_number],
+                      ['FCY Rate', item.fcy_rate?.toString()],
+                      ['Invoice Value (FCY)', item.invoice_value_fcy?.toString()],
+                      ['Supplier', item.supplier_name || item.supplier],
+                      ['Origin', item.origin_country],
+                    ].map(([k, v]) => (
+                      <div key={k} className="flex justify-between border-b border-[var(--border)]/60 py-1">
+                        <span className="text-[var(--muted-foreground)]">{k}</span>
+                        <span className="text-[var(--foreground)] font-medium text-right">{v || '—'}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Charge ledger */}
+                  <div>
+                    <h4 className="text-[11px] font-secondary font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-2">Charge Ledger</h4>
+                    <div className="rounded-lg border border-[var(--border)] overflow-hidden">
+                      <table className="w-full text-xs font-secondary">
+                        <thead className="bg-[var(--secondary)] text-[var(--muted-foreground)]">
+                          <tr>
+                            <th className="text-left px-3 py-2 font-medium">Description</th>
+                            <th className="text-right px-3 py-2 font-medium">Customs Price</th>
+                            <th className="text-right px-3 py-2 font-medium">Amount (ETB)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(item.charges || []).map((c, i) => (
+                            <tr key={c.name || i} className={`border-t border-[var(--border)] ${c.recoverable ? 'text-[var(--destructive,#DC2626)]' : ''}`}>
+                              <td className="px-3 py-1.5">{c.description}</td>
+                              <td className="px-3 py-1.5 text-right font-mono">{c.customs_amount ? fmtETB(c.customs_amount) : '—'}</td>
+                              <td className="px-3 py-1.5 text-right font-mono">{c.etb_amount ? fmtETB(c.etb_amount) : '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* GL distribution */}
+                  <div>
+                    <h4 className="text-[11px] font-secondary font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-2">GL Distribution</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Stat label="Purchase (5200)" mono value={fmtETB(item.purchase_total || 0)} />
+                      <Stat label="Supplier Payable (1440)" mono value={fmtETB(item.supplier_payable || 0)} />
+                      <Stat label="Goods In Transit (1420)" mono value={fmtETB(item.git_amount || 0)} />
+                      <Stat label="CVD / Valuation Variance (2400)" mono value={fmtETB(item.cvd_amount || 0)} />
+                      <Stat label="Less: VAT Rebate" mono value={fmtETB(item.vat_rebate || 0)} />
+                      <Stat label="Less: Withholding" mono value={fmtETB(item.withholding_payable || 0)} />
+                    </div>
+                  </div>
+
+                  {/* Item allocation */}
+                  <div>
+                    <h4 className="text-[11px] font-secondary font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-2">Item Landed Cost Allocation</h4>
+                    <div className="rounded-lg border border-[var(--border)] overflow-hidden">
+                      <table className="w-full text-xs font-secondary">
+                        <thead className="bg-[var(--secondary)] text-[var(--muted-foreground)]">
+                          <tr>
+                            <th className="text-left px-3 py-2 font-medium">Item</th>
+                            <th className="text-right px-3 py-2 font-medium">Qty</th>
+                            <th className="text-right px-3 py-2 font-medium">Unit Cost</th>
+                            <th className="text-right px-3 py-2 font-medium">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(item.item_allocation || []).map((a, i) => (
+                            <tr key={a.name || i} className="border-t border-[var(--border)]">
+                              <td className="px-3 py-1.5">{a.description || a.item_code}</td>
+                              <td className="px-3 py-1.5 text-right font-mono">{a.qty}</td>
+                              <td className="px-3 py-1.5 text-right font-mono">{fmtETB(a.landed_unit_cost || 0)}</td>
+                              <td className="px-3 py-1.5 text-right font-mono">{fmtETB(a.landed_total || 0)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {item.landed_cost_voucher && (
+                    <a href={erpnextUrl(`/app/landed-cost-voucher/${item.landed_cost_voucher}`)} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-secondary font-semibold text-[var(--primary)] no-underline">
+                      <ExternalLink size={12} /> Landed Cost Voucher {item.landed_cost_voucher}
+                    </a>
+                  )}
+                </div>
+              )}
+
             </div>
           )}
         </div>
@@ -265,6 +370,22 @@ export default function ShipmentDetailDrawer({ editName, onClose }: Props) {
             <button onClick={onClose} className="text-sm font-secondary font-medium px-4 py-2 rounded-lg bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors">
               Close
             </button>
+            <a
+              href={printViewUrl('Import Shipment', editName)}
+              target="_blank" rel="noreferrer"
+              title="Print cost sheet"
+              className="text-sm font-secondary font-medium px-3 py-2 rounded-lg bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors no-underline flex items-center gap-1.5"
+            >
+              <Printer size={13} className="opacity-80" /> Print
+            </a>
+            <a
+              href={pdfDownloadUrl('Import Shipment', editName)}
+              target="_blank" rel="noreferrer"
+              title="Download cost sheet as PDF"
+              className="text-sm font-secondary font-medium px-3 py-2 rounded-lg bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors no-underline flex items-center gap-1.5"
+            >
+              <Download size={13} className="opacity-80" /> PDF
+            </a>
             <a
               href={erpnextUrl(`/app/import-shipment/${editName}`)}
               target="_blank" rel="noreferrer"

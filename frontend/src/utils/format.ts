@@ -9,6 +9,18 @@ export function erpnextUrl(path: string): string {
   return `${base}${path}`;
 }
 
+/** Open the Frappe HTML print view (auto-triggers the browser print dialog). */
+export function printViewUrl(doctype: string, name: string, format = 'Import Cost Sheet'): string {
+  const q = new URLSearchParams({ doctype, name, format, trigger_print: '1', no_letterhead: '0' });
+  return erpnextUrl(`/printview?${q.toString()}`);
+}
+
+/** Direct PDF download of a print format for a document. */
+export function pdfDownloadUrl(doctype: string, name: string, format = 'Import Cost Sheet'): string {
+  const q = new URLSearchParams({ doctype, name, format, no_letterhead: '0' });
+  return erpnextUrl(`/api/method/frappe.utils.print_format.download_pdf?${q.toString()}`);
+}
+
 const _fmtCurrency = new Intl.NumberFormat('en-ET', { style: 'currency', currency: 'ETB', maximumFractionDigits: 0 });
 
 /** Format a number as compact ETB (e.g. ETB 4.2M, ETB 320K) */
@@ -16,6 +28,13 @@ export function fmtETBCompact(val: number): string {
   if (val >= 1_000_000) return `ETB ${(val / 1_000_000).toFixed(1)}M`;
   if (val >= 1_000) return `ETB ${(val / 1_000).toFixed(0)}K`;
   return `ETB ${_fmtPlain.format(val)}`;
+}
+
+/** Compact number for chart axis ticks (6.0M, 320K) — ETB context comes from the card/tooltip */
+export function fmtCompactNum(val: number): string {
+  if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(1)}M`;
+  if (val >= 1_000) return `${(val / 1_000).toFixed(0)}K`;
+  return `${val}`;
 }
 
 /** Format a number as full ETB currency string */

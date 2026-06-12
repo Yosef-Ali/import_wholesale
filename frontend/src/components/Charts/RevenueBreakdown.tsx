@@ -7,8 +7,12 @@ interface Props {
 const BARS = [60, 80, 50, 100, 70, 120, 90, 110, 65, 85, 55, 95, 75, 45, 105, 68, 88, 72, 58, 42];
 
 export default function RevenueBreakdown({ totalRevenue }: Props) {
+  const now = new Date();
+  const monthShort = now.toLocaleString('en', { month: 'short' }).toUpperCase();
+  const monthLong = now.toLocaleString('en', { month: 'long' });
+
   return (
-    <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] overflow-hidden flex flex-col h-[420px] w-[340px] shrink-0">
+    <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] overflow-hidden flex flex-col h-[420px] w-full xl:w-[340px] shrink-0">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-2">
@@ -22,12 +26,12 @@ export default function RevenueBreakdown({ totalRevenue }: Props) {
 
       {/* Content */}
       <div className="flex flex-col gap-1 px-5">
-        <span className="font-secondary text-[0.8125rem] text-[var(--muted-foreground)]">Revenue by Category</span>
+        <span className="font-secondary text-[0.8125rem] text-[var(--muted-foreground)]">Daily revenue this month</span>
         <div className="flex items-center justify-between">
           <span className="font-secondary text-[1.75rem] font-bold text-[var(--foreground)]">{totalRevenue}</span>
           <div className="flex items-center gap-1.5 border border-[var(--border)] rounded-full px-2.5 py-1.5">
             <Calendar size={12} className="text-[var(--muted-foreground)]" />
-            <span className="font-secondary text-[0.65rem] text-[var(--foreground)]">Jan 1 - Aug 30</span>
+            <span className="font-secondary text-[0.65rem] text-[var(--foreground)]">{monthLong} {now.getFullYear()}</span>
           </div>
         </div>
       </div>
@@ -40,20 +44,23 @@ export default function RevenueBreakdown({ totalRevenue }: Props) {
       </div>
 
       {/* Bar Chart */}
-      <div className="flex-1 flex items-end gap-1 px-5 pb-0 mt-4">
-        {BARS.map((h, i) => (
-          <div
-            key={i}
-            className="flex-1 bg-[var(--primary)] rounded-t-sm"
-            style={{ height: `${h}px` }}
-          />
-        ))}
+      <div className="flex-1 flex items-end gap-[3px] px-5 pb-0 mt-4">
+        {BARS.map((h, i) => {
+          const max = Math.max(...BARS);
+          return (
+            <div
+              key={i}
+              className="flex-1 bg-[var(--primary)] rounded-t-full transition-opacity duration-150 hover:opacity-100"
+              style={{ height: `${h}px`, opacity: h === max ? 1 : 0.3 + (h / max) * 0.5 }}
+            />
+          );
+        })}
       </div>
 
       {/* X-axis Labels */}
       <div className="flex items-center justify-between px-5 py-3">
-        <span className="font-primary text-[0.5625rem] text-[var(--muted-foreground)]">1 JAN</span>
-        <span className="font-primary text-[0.5625rem] text-[var(--muted-foreground)]">30 JAN 2025</span>
+        <span className="font-primary text-[0.5625rem] text-[var(--muted-foreground)]">1 {monthShort}</span>
+        <span className="font-primary text-[0.5625rem] text-[var(--muted-foreground)]">30 {monthShort} {now.getFullYear()}</span>
       </div>
     </div>
   );

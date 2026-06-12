@@ -96,9 +96,9 @@ export default function ItemList() {
 
   function getStockLevel(item: Item): 'ok' | 'low' | 'out' {
     const sl = stockMap[item.item_code];
-    if (!sl) return 'ok';
-    if (sl.actual_qty <= 0) return 'out';
-    if (sl.is_low_stock) return 'low';
+    // Rows display `sl?.actual_qty ?? 0`, so a missing record must read as out, not ok.
+    if (!sl || sl.actual_qty <= 0) return 'out';
+    if (sl.is_low_stock ?? sl.actual_qty <= (sl.safety_stock ?? 0)) return 'low';
     return 'ok';
   }
 
@@ -281,8 +281,8 @@ export default function ItemList() {
                           />
                         ) : null}
                         <div className="relative group/upload" style={{ display: item.image ? 'none' : undefined }}>
-                          <label 
-                            className="w-7 h-7 rounded-md bg-[var(--secondary)] flex items-center justify-center shrink-0 cursor-pointer hover:bg-[var(--border)] transition-colors border border-dashed border-transparent hover:border-[var(--muted-foreground)]" 
+                          <label
+                            className="w-7 h-7 rounded-md bg-[var(--secondary)] flex items-center justify-center shrink-0 cursor-pointer hover:bg-[var(--border)] transition-colors border border-dashed border-transparent hover:border-[var(--muted-foreground)]"
                             title="Upload Image"
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -413,8 +413,8 @@ export default function ItemList() {
                           />
                         ) : null}
                         <div className="relative group/upload shrink-0" style={{ display: item.image ? 'none' : undefined }}>
-                          <label 
-                            className="w-12 h-12 rounded-lg bg-[var(--secondary)] flex items-center justify-center cursor-pointer hover:bg-[var(--border)] transition-colors border border-dashed border-transparent hover:border-[var(--muted-foreground)]" 
+                          <label
+                            className="w-12 h-12 rounded-lg bg-[var(--secondary)] flex items-center justify-center cursor-pointer hover:bg-[var(--border)] transition-colors border border-dashed border-transparent hover:border-[var(--muted-foreground)]"
                             title="Upload Image"
                             onClick={(e) => e.stopPropagation()}
                           >

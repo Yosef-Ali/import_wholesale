@@ -66,6 +66,23 @@ export async function getLoggedUser(): Promise<string | null> {
   }
 }
 
+// Roles for the current user. Reads the user's own User doc (always permitted),
+// returning the role names from its `roles` child table. Never throws — auth flow
+// must not break if this call fails; callers treat an empty list as "no roles".
+export async function getUserRoles(user: string): Promise<string[]> {
+  try {
+    const res = await fetch(`${BASE}/resource/User/${encodeURIComponent(user)}`, {
+      credentials: 'include',
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const roles = data.data?.roles as { role: string }[] | undefined;
+    return roles ? roles.map((r) => r.role) : [];
+  } catch {
+    return [];
+  }
+}
+
 // ── Generic CRUD ──────────────────────────────────────────────────────
 
 export async function getList<T = Record<string, unknown>>(
@@ -368,31 +385,31 @@ function getDevMockData(method: string, _args?: Record<string, unknown>): any {
   }
   if (method.includes('top_items')) {
     return [
-      { item_name: 'Deformed Rebar 16mm', item_code: 'STL-RB-16', total_revenue: 4_500_000 },
-      { item_name: 'Portland Cement 50kg', item_code: 'CMT-PC-50', total_revenue: 3_200_000 },
-      { item_name: 'Corrugated Iron Sheet', item_code: 'STL-CI-28', total_revenue: 2_800_000 },
-      { item_name: 'Ceramic Floor Tile 40x40', item_code: 'TIL-CF-40', total_revenue: 2_100_000 },
-      { item_name: 'PVC Pipe 4" x 6m', item_code: 'PIP-PV-4', total_revenue: 1_600_000 },
-      { item_name: 'Exterior Wall Paint 20L', item_code: 'PNT-EW-20', total_revenue: 980_000 },
+      { item_name: 'Deformed Rebar 16mm', item_code: 'STL-RB-16', total_qty: 3750, total_amount: 4_500_000 },
+      { item_name: 'Portland Cement 50kg', item_code: 'CMT-PC-50', total_qty: 5520, total_amount: 3_200_000 },
+      { item_name: 'Corrugated Iron Sheet', item_code: 'STL-CI-28', total_qty: 4000, total_amount: 2_800_000 },
+      { item_name: 'Ceramic Floor Tile 40x40', item_code: 'TIL-CF-40', total_qty: 5250, total_amount: 2_100_000 },
+      { item_name: 'PVC Pipe 4" x 6m', item_code: 'PIP-PV-4', total_qty: 2670, total_amount: 1_600_000 },
+      { item_name: 'Exterior Wall Paint 20L', item_code: 'PNT-EW-20', total_qty: 306, total_amount: 980_000 },
     ];
   }
   if (method.includes('sales_trend')) {
     return [
-      { month: 'Oct', revenue: 2_100_000 },
-      { month: 'Nov', revenue: 2_450_000 },
-      { month: 'Dec', revenue: 1_900_000 },
-      { month: 'Jan', revenue: 2_800_000 },
-      { month: 'Feb', revenue: 3_100_000 },
-      { month: 'Mar', revenue: 3_250_000 },
+      { month: 'Oct', total: 2_100_000 },
+      { month: 'Nov', total: 2_450_000 },
+      { month: 'Dec', total: 1_900_000 },
+      { month: 'Jan', total: 2_800_000 },
+      { month: 'Feb', total: 3_100_000 },
+      { month: 'Mar', total: 3_250_000 },
     ];
   }
   if (method.includes('top_customers')) {
     return [
-      { customer_name: 'Sunshine Construction', total_revenue: 5_200_000 },
-      { customer_name: 'Nile Building PLC', total_revenue: 3_800_000 },
-      { customer_name: 'Abyssinia Developers', total_revenue: 2_900_000 },
-      { customer_name: 'Meskel Construction', total_revenue: 2_100_000 },
-      { customer_name: 'Addis Real Estate', total_revenue: 1_450_000 },
+      { customer: 'CUST-0001', customer_name: 'Sunshine Construction', invoice_count: 14, total_revenue: 5_200_000 },
+      { customer: 'CUST-0002', customer_name: 'Nile Building PLC', invoice_count: 9, total_revenue: 3_800_000 },
+      { customer: 'CUST-0003', customer_name: 'Abyssinia Developers', invoice_count: 11, total_revenue: 2_900_000 },
+      { customer: 'CUST-0004', customer_name: 'Meskel Construction', invoice_count: 6, total_revenue: 2_100_000 },
+      { customer: 'CUST-0005', customer_name: 'Addis Real Estate', invoice_count: 4, total_revenue: 1_450_000 },
     ];
   }
   return {};
@@ -434,6 +451,47 @@ function getDevMockList(doctype: string): any[] {
   }
   if (doctype === 'Import Shipment') {
     inMemoryStore[doctype] = [
+      // Full cost-sheet detail (real declaration 4-013659) so CostSheetView renders offline.
+      {
+        name: 'IMP-2025-00042', shipment_title: 'PVC & Blockboard Import', status: 'Cleared',
+        supplier: 'Suqian Panda Int\'l Trade', supplier_name: 'Suqian Panda Int\'l Trade', origin_country: 'China',
+        tax_payer: 'MIHRETEAB MELKIE', tin_number: '0053323233', declaration_number: '4-013659',
+        bank_permit_number: 'DSB/DMB/01/03395/2025', commercial_invoice_no: 'V-HY2501', bl_number: 'PENCB25004089',
+        fcy_rate: 134.5121, invoice_value_fcy: 35_144.20, dvp_value: 11_197_355.00, alloc_method: 'Allocation Basis',
+        purchase_total: 14_706_242.42, supplier_payable: 4_727_320.14, git_amount: 5_025_731.82, cvd_amount: 4_953_190.46,
+        charges: [
+          { sn: 1,  description: 'Invoice Price (FOB)', charge_group: 'Cost Basis', etb_amount: 4_727_320.14, customs_amount: 4_727_320.14, is_fob: 1 },
+          { sn: 3,  description: 'Insurance', charge_group: 'Cost Basis', etb_amount: 4_539.12, customs_amount: 4_539.12 },
+          { sn: 7,  description: 'Sea Freight Charge', charge_group: 'Cost Basis', etb_amount: 1_230_958.62, customs_amount: 1_230_958.62 },
+          { sn: 8,  description: 'Port Clearance charges (Djibouti)', charge_group: 'Cost Basis', etb_amount: 281_346.66, customs_amount: 281_346.66 },
+          { sn: 4,  description: 'Service Charge On Opening CAD', charge_group: 'Bank', etb_amount: 184_334.27, customs_amount: 184_334.27 },
+          { sn: 5,  description: 'Postage/Swift charges/exchange', charge_group: 'Bank', etb_amount: 128_451.41, customs_amount: 128_451.41 },
+          { sn: 9,  description: 'Bank Service Charge on Freight & Port', charge_group: 'Bank', etb_amount: 46_519.16, customs_amount: 46_519.16 },
+          { sn: 10, description: 'Transportation Cost From Djibouti to Modjo', charge_group: 'Freight & Logistics', etb_amount: 779_934.00, customs_amount: 779_934.00 },
+          { sn: 11, description: 'Customs Duty Tax (15%/35%)', charge_group: 'Duty & Tax', etb_amount: 1_787_961.70, customs_amount: 1_787_961.70 },
+          { sn: 12, description: 'Sur tax', charge_group: 'Duty & Tax', etb_amount: 73_142.10, customs_amount: 73_142.10 },
+          { sn: 13, description: 'Social Welfare Tax (3%)', charge_group: 'Duty & Tax', etb_amount: 319_666.80, customs_amount: 319_666.80 },
+          { sn: 14, description: 'Scanning Fee (7%)', charge_group: 'Duty & Tax', etb_amount: 7_837.00, customs_amount: 7_837.00 },
+          { sn: 15, description: 'Other', charge_group: 'Other', etb_amount: 1_175.72, customs_amount: 1_175.72 },
+          { sn: 16, description: 'Vat Receivable', charge_group: 'Duty & Tax', etb_amount: 2_006_719.30, customs_amount: 2_006_719.30 },
+          { sn: 17, description: 'Withholding On Customs', charge_group: 'Duty & Tax', etb_amount: 335_920.59, customs_amount: 335_920.59 },
+          { sn: 18, description: 'ESLSE Modjo Port/Terminal service', charge_group: 'Handling', etb_amount: 37_128.95, customs_amount: 37_128.95 },
+          { sn: 19, description: 'Transit Cost', charge_group: 'Freight & Logistics', etb_amount: 10_000.00, customs_amount: 10_000.00 },
+          { sn: 20, description: 'Container Unstuffing', charge_group: 'Handling', etb_amount: 42_000.00, customs_amount: 42_000.00 },
+          { sn: 21, description: 'Transportation Cost From Modjo to warehouse', charge_group: 'Freight & Logistics', etb_amount: 76_000.00, customs_amount: 76_000.00 },
+          { sn: 22, description: 'Demurrage', charge_group: 'Handling', etb_amount: 13_778.58, customs_amount: 13_778.58 },
+          { sn: 23, description: 'Bank CPO charges', charge_group: 'Bank', etb_amount: 957.73, customs_amount: 957.73 },
+          { sn: 25, description: 'Less:-Vat Rebate', charge_group: 'Deduction', etb_amount: 2_006_719.30, customs_amount: 2_006_719.30, recoverable: 1 },
+          { sn: 26, description: 'Less:-Withholding Payable', charge_group: 'Deduction', etb_amount: 335_920.59, customs_amount: 335_920.59, recoverable: 1 },
+        ],
+        item_allocation: [
+          { item_code: 'PVC-2.8',   description: 'PVC SHEET -1220x2440x2.8MM', qty: 403,  weight_basis: 2_291_022.51 },
+          { item_code: 'PVC-3.0',   description: 'PVC SHEET -1220x2440x3.0MM', qty: 293,  weight_basis: 1_788_331.83 },
+          { item_code: 'PVC-8.0',   description: 'PVC SHEET -1220x2440x8.0MM', qty: 26,   weight_basis: 412_806.34 },
+          { item_code: 'BLOCK-18',  description: 'Blockboard - 1220x2440x18mm', qty: 1795, weight_basis: 9_393_242.10 },
+          { item_code: 'EDGE-BAND', description: 'PVC Edge Banding', qty: 150, weight_basis: 820_839.22 },
+        ],
+      },
       { name: 'SHP-2026-001', shipment_title: 'Steel Rebar Shipment', origin_country: 'China', eta: '2026-03-18', status: 'In Transit', total_landed_cost: 4_200_000 },
       { name: 'SHP-2026-002', shipment_title: 'Cement Bulk Order', origin_country: 'Turkey', eta: '2026-03-12', status: 'In Transit', total_landed_cost: 2_800_000 },
       { name: 'SHP-2026-003', shipment_title: 'Tile Collection Q1', origin_country: 'UAE', eta: '2026-03-25', status: 'Ordered', total_landed_cost: 1_600_000 },

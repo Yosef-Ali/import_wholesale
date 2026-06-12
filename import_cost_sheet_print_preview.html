@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>IMP-2025-00042 — Import Cost Sheet (Print / PDF)</title>
+<style>
+  @page{size:A4;margin:14mm}
+  *{box-sizing:border-box}
+  body{margin:0;background:#eceef1;font-family:Arial,Helvetica,sans-serif;color:#111}
+  .toolbar{position:sticky;top:0;background:#1f2937;color:#fff;display:flex;gap:10px;align-items:center;
+    padding:10px 16px;font-size:13px}
+  .toolbar b{font-weight:700}
+  .toolbar button{margin-left:auto;background:#2563EB;color:#fff;border:0;border-radius:7px;
+    padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer}
+  .page{background:#fff;width:210mm;min-height:297mm;margin:18px auto;padding:16mm 14mm;
+    box-shadow:0 2px 14px rgba(0,0,0,.12);font-size:10.5px}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:10px}
+  .head .co{font-size:16px;font-weight:800}
+  .head .co small{display:block;font-weight:400;font-size:10px;color:#555;margin-top:2px}
+  .head .ttl{text-align:right}
+  .head .ttl h1{font-size:15px;margin:0}
+  .head .ttl div{font-size:10px;color:#555;margin-top:3px}
+  table{width:100%;border-collapse:collapse;margin-bottom:10px}
+  td,th{border:1px solid #555;padding:2.5px 6px}
+  .hdrtbl td{border:none;padding:1.5px 4px}
+  .hdrtbl td.k{color:#555;width:22%}
+  .hdrtbl td.v{font-weight:700}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  thead th{background:#f0f0f0;font-size:9.5px;text-transform:uppercase;letter-spacing:.03em}
+  tr.total td{background:#eef4ff;font-weight:800;border-top:2px solid #111}
+  tr.var td{font-weight:700}
+  tr.neg td{color:#b00}
+  h3{font-size:11px;margin:12px 0 5px;border-left:3px solid #2563EB;padding-left:6px}
+  .gl td:first-child{width:48px;font-weight:700}
+  .sign{display:flex;justify-content:space-between;margin-top:26px;font-size:10px;color:#555}
+  .sign div{border-top:1px solid #999;width:30%;padding-top:5px;text-align:center}
+  @media print{.toolbar{display:none}.page{box-shadow:none;margin:0;width:auto}body{background:#fff}}
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <b>IMP-2025-00042</b> · Import Cost Sheet — this is how the printout / downloaded PDF looks
+    <button onclick="window.print()">⎙ Print / Save as PDF</button>
+  </div>
+
+  <div class="page">
+    <div class="head">
+      <div class="co">BuildSupply Pro<small>Import &amp; Wholesale — Construction Materials</small></div>
+      <div class="ttl"><h1>IMPORT COST SHEET</h1>
+        <div>Shipment: IMP-2025-00042</div>
+        <div>Declaration: 4-013659</div></div>
+    </div>
+
+    <table class="hdrtbl"><tbody>
+      <tr><td class="k">Name of Tax Payer</td><td class="v">MIHRETEAB MELKIE</td><td class="k">Commercial Invoice</td><td class="v">V-HY2501</td></tr>
+      <tr><td class="k">TIN Number</td><td class="v">0053323233</td><td class="k">Bill of Lading</td><td class="v">PENCB25004089</td></tr>
+      <tr><td class="k">Declaration Number</td><td class="v">4-013659</td><td class="k">FCY Rate</td><td class="v">134.5121</td></tr>
+      <tr><td class="k">Bank Permit Number</td><td class="v">DSB/DMB/01/03395/2025</td><td class="k">Invoice Value (FCY)</td><td class="v">35,144.20 USD</td></tr>
+      <tr><td class="k">Supplier</td><td class="v">SUQIAN PANDA INT'L TRADE</td><td class="k">Country of Origin</td><td class="v">CHINA</td></tr>
+      <tr><td class="k">Description</td><td class="v">PVC Sheet, Laminated Blockboard</td><td class="k">Customs Base Value (DVP)</td><td class="v">11,197,355.00</td></tr>
+    </tbody></table>
+
+    <table><thead><tr>
+      <th style="width:34px">s/n</th><th>Description</th>
+      <th class="num" style="width:120px">Customs Invoice Price</th>
+      <th class="num" style="width:110px">Amount in ETB</th>
+    </tr></thead><tbody id="ledger"></tbody></table>
+
+    <h3>GL Distribution</h3>
+    <table class="gl"><tbody>
+      <tr><td>5200</td><td>PURCHASE</td><td class="num">14,706,242.42</td></tr>
+      <tr><td>2400</td><td>CVD — Customs Valuation Variance</td><td class="num">4,953,190.46</td></tr>
+      <tr><td>1420</td><td>GIT — Goods In Transit</td><td class="num">5,025,731.82</td></tr>
+      <tr><td>1440</td><td>SUQIAN PANDA INT'L TRADE</td><td class="num">4,727,320.14</td></tr>
+    </tbody></table>
+
+    <h3>Item Landed Cost Allocation</h3>
+    <table><thead><tr>
+      <th class="num" style="width:60px">QTY</th><th>Description</th>
+      <th class="num" style="width:110px">Unit Price</th><th class="num" style="width:120px">Total</th>
+    </tr></thead><tbody id="alloc"></tbody></table>
+
+    <div class="sign"><div>Prepared by</div><div>Checked by</div><div>Approved by</div></div>
+  </div>
+
+<script>
+  const fmt=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const rows=[
+    [1,"Invoice Price (FOB)",null,4727320.14,0],[2,"Customs Base Value (DVP)",11197355.00,null,0],
+    [3,"Insurance",null,4539.12,0],[4,"Service Charge On Opening CAD",184334.27,184334.27,0],
+    [5,"Postage/Swift charges/exchange",128451.41,128451.41,0],[7,"Sea Freight Charge",null,1230958.62,0],
+    [8,"Port Clearance charges (Djibouti)",null,281346.66,0],[9,"Bank Service Charge on Freight & Port",46519.16,46519.16,0],
+    [10,"Transportation Cost From Djibouti to Modjo",779934.00,779934.00,0],[11,"Customs Duty Tax (15%/35%)",1787961.70,1787961.70,0],
+    [12,"Sur tax",73142.10,73142.10,0],[13,"Social Welfare Tax (3%)",319666.80,319666.80,0],
+    [14,"Scanning Fee (7%)",7837.00,7837.00,0],[15,"Other",1175.72,1175.72,0],
+    [16,"Vat Receivable",2006719.30,2006719.30,0],[17,"Withholding On Customs",335920.59,335920.59,0],
+    [18,"ESLSE Modjo Port/Terminal service",37128.95,37128.95,0],[19,"Transit Cost",10000.00,10000.00,0],
+    [20,"Container Unstuffing",42000.00,42000.00,0],[21,"Transportation Cost From Modjo to warehouse",76000.00,76000.00,0],
+    [22,"Demurrage",13778.58,13778.58,0],[23,"Bank CPO charges",957.73,957.73,0],
+    [25,"Less:-Vat Rebate",-2006719.30,-2006719.30,1],[26,"Less:-Withholding Payable",-335920.59,-335920.59,1],
+  ];
+  const lb=document.getElementById('ledger');
+  rows.forEach(r=>{const tr=document.createElement('tr');if(r[4])tr.className='neg';
+    tr.innerHTML=`<td class="num">${r[0]}</td><td>${r[1]}</td><td class="num">${r[2]==null?'':fmt(r[2])}</td><td class="num">${r[3]==null?'':fmt(r[3])}</td>`;lb.appendChild(tr);});
+  const t=document.createElement('tr');t.className='total';
+  t.innerHTML=`<td></td><td>Total</td><td class="num">14,706,242.42</td><td class="num">9,753,051.96</td>`;lb.appendChild(t);
+  const v=document.createElement('tr');v.className='var';
+  v.innerHTML=`<td></td><td>Custom Valuation Variance</td><td class="num">4,953,190.46</td><td></td>`;lb.appendChild(v);
+
+  const items=[["PVC SHEET -1220x2440x2.8MM",403,5684.92,2291022.51],["PVC SHEET -1220x2440x3.0MM",293,6103.52,1788331.83],
+    ["PVC SHEET -1220x2440x8.0MM",26,15877.17,412806.34],["Blockboard - 1220x2440x18mm",1795,5233.00,9393242.10],
+    ["PVC Edge Banding",150,5472.26,820839.22]];
+  const ab=document.getElementById('alloc');
+  items.forEach(i=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="num">${i[1]}</td><td>${i[0]}</td><td class="num">${fmt(i[2])}</td><td class="num">${fmt(i[3])}</td>`;ab.appendChild(tr);});
+  const at=document.createElement('tr');at.className='total';
+  at.innerHTML=`<td></td><td>Total Landed Cost</td><td></td><td class="num">14,706,242.42</td>`;ab.appendChild(at);
+</script>
+</body>
+</html>

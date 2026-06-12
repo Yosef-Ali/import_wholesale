@@ -81,7 +81,7 @@ export default function Reports() {
           </div>
           <div className="flex items-center gap-2 bg-[var(--secondary)] rounded-full px-3 py-2">
             <Calendar size={14} className="text-[var(--muted-foreground)]" />
-            <span className="font-secondary text-sm text-[var(--foreground)]">2025</span>
+            <span className="font-secondary text-sm text-[var(--foreground)]">{new Date().getFullYear()}</span>
           </div>
           <button className="flex items-center gap-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full px-4 py-2 font-primary text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity">
             <Download size={14} />
@@ -91,7 +91,7 @@ export default function Reports() {
       </div>
 
       {/* ── KPI Grid ── */}
-      <div className="grid grid-cols-4 gap-4 px-6 py-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-6 py-4">
         <StatCard
           title="Total Revenue"
           value={fmtETBCompact(totalRevenue || (stats?.monthly_sales ?? 0))}
@@ -103,7 +103,7 @@ export default function Reports() {
           title="Units Sold"
           value={totalQty > 0 ? totalQty.toLocaleString() : '—'}
           subtitle="Items"
-          change="+8.2% vs last period"
+          change={totalQty > 0 ? '+8.2% vs last period' : undefined}
           delay="0.08s"
           bars={[16, 24, 20, 28]}
         />
@@ -111,21 +111,21 @@ export default function Reports() {
           title="Active Customers"
           value={topCustomers.length > 0 ? topCustomers.length.toString() : '—'}
           subtitle="Customers"
-          change="Top performers"
+          change={topCustomers.length > 0 ? 'Top performers' : undefined}
           delay="0.12s"
           bars={[20, 16, 24, 20]}
         />
         <StatCard
           title="Avg Order Value"
           value={avgOrderValue > 0 ? fmtETBCompact(avgOrderValue) : '—'}
-          change="+5.1% vs last period"
+          change={avgOrderValue > 0 ? '+5.1% vs last period' : undefined}
           delay="0.16s"
           bars={[24, 20, 16, 28]}
         />
       </div>
 
       {/* ── Charts Row ── */}
-      <div className="flex gap-4 px-6 pb-6">
+      <div className="flex flex-col xl:flex-row gap-4 px-6 pb-6">
         <div className="flex-1">
           <TopItemsChart data={topItems} />
         </div>

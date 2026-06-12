@@ -1,0 +1,16 @@
+{
+  "$comment": "Shared, committed project settings. Personal overrides go in settings.local.json (gitignored). The Stop hook enforces the Definition of Done from CLAUDE.md.",
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/verify-done.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

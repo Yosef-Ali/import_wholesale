@@ -86,6 +86,57 @@ export interface ImportShipment {
   sur_tax?: number;
   vat?: number;
   other_charges?: number;
+  // Customs declaration header
+  tax_payer?: string;
+  tin_number?: string;
+  declaration_number?: string;
+  item_description?: string;
+  bank_permit_number?: string;
+  commercial_invoice_no?: string;
+  bl_number?: string;
+  fcy_rate?: number;
+  invoice_value_fcy?: number;
+  dvp_value?: number;
+  // Cost-sheet totals & GL distribution
+  customs_total?: number;
+  etb_total?: number;
+  vat_rebate?: number;
+  withholding_payable?: number;
+  purchase_total?: number;
+  supplier_payable?: number;
+  git_amount?: number;
+  cvd_amount?: number;
+  // Linkage
+  purchase_receipt?: string;
+  landed_cost_voucher?: string;
+  alloc_method?: string;
+  // Child tables
+  charges?: ImportChargeLine[];
+  item_allocation?: ImportItemAllocation[];
+}
+
+export interface ImportChargeLine {
+  name?: string;
+  sn?: number;
+  description?: string;
+  charge_group?: string;
+  customs_amount?: number;
+  etb_amount?: number;
+  is_fob?: number;
+  capitalize?: number;
+  recoverable?: number;
+  distribute?: number;
+  lcv_account?: string;
+}
+
+export interface ImportItemAllocation {
+  name?: string;
+  item_code?: string;
+  description?: string;
+  qty?: number;
+  weight_basis?: number;
+  landed_unit_cost?: number;
+  landed_total?: number;
 }
 
 export interface Warehouse {

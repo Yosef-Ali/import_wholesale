@@ -3,7 +3,7 @@ import {
   Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { MoreHorizontal, Info, Users } from 'lucide-react';
-import { fmtETBPlain, fmtETBCompact } from '../../utils/format';
+import { fmtETBPlain, fmtETBCompact, fmtCompactNum } from '../../utils/format';
 
 interface TopCustomer {
   customer: string;
@@ -22,7 +22,7 @@ function ChartTip({ active, payload, label }: any) {
   return (
     <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-3 shadow-lg font-secondary min-w-[180px]">
       <p className="text-[0.6rem] font-primary font-bold text-[var(--muted-foreground)] uppercase tracking-widest mb-2 truncate max-w-[160px]">
-        {label}
+        {payload[0]?.payload?.customer_name ?? label}
       </p>
       {payload.map((p: { name: string; value: number; color: string }, i: number) => (
         <div key={i} className="flex justify-between items-center gap-4 mt-1">
@@ -42,10 +42,14 @@ function ChartTip({ active, payload, label }: any) {
 export default function TopCustomersChart({ data }: Props) {
   const totalRevenue = data.reduce((s, c) => s + (c.total_revenue || 0), 0);
 
-  const chartData = data.map(c => ({
-    ...c,
-    displayName: c.customer_name.split(' ').slice(0, 2).join(' '),
-  }));
+  // Short single-word labels keep the angled X-axis readable; full name stays in the tooltip.
+  const chartData = data.map(c => {
+    const first = c.customer_name.split(' ')[0];
+    return {
+      ...c,
+      displayName: first.length > 12 ? first.slice(0, 12) + '…' : first,
+    };
+  });
 
   return (
     <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] flex flex-col h-[420px]">
@@ -92,7 +96,13 @@ export default function TopCustomersChart({ data }: Props) {
               margin={{ top: 8, right: 12, left: -18, bottom: 0 }}
               barCategoryGap="22%"
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <defs>
+                <linearGradient id="custBarFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={1} />
+                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.45} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 6" stroke="var(--border)" vertical={false} />
               <XAxis
                 dataKey="displayName"
                 tick={{ fontFamily: 'var(--font-primary)', fontSize: 9, fill: 'var(--muted-foreground)' }}
@@ -108,7 +118,7 @@ export default function TopCustomersChart({ data }: Props) {
                 tick={{ fontFamily: 'var(--font-primary)', fontSize: 9, fill: 'var(--muted-foreground)' }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`}
+                tickFormatter={fmtCompactNum}
               />
               <YAxis
                 yAxisId="invoices"
@@ -122,18 +132,19 @@ export default function TopCustomersChart({ data }: Props) {
                 yAxisId="revenue"
                 dataKey="total_revenue"
                 name="Revenue"
-                fill="var(--primary)"
-                radius={[3, 3, 0, 0]}
-                barSize={22}
-                opacity={0.9}
+                fill="url(#custBarFill)"
+                radius={[6, 6, 0, 0]}
+                barSize={26}
               />
               <Line
                 yAxisId="invoices"
+                type="monotone"
                 dataKey="invoice_count"
                 name="Invoices"
                 stroke="var(--foreground)"
                 strokeWidth={1.5}
                 strokeOpacity={0.4}
+                strokeDasharray="5 3"
                 dot={{ fill: 'var(--foreground)', r: 3, strokeWidth: 0, fillOpacity: 0.5 }}
                 activeDot={{ r: 4, fill: 'var(--foreground)', fillOpacity: 0.7 }}
               />

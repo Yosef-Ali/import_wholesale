@@ -88,7 +88,12 @@ export default function TopItemsChart({ data }: Props) {
                 width={140}
               />
               <Tooltip content={<ChartTip />} cursor={{ fill: 'var(--border)', opacity: 0.4 }} />
-              <Bar dataKey="total_amount" radius={[0, 4, 4, 0]} barSize={13}>
+              <Bar
+                dataKey="total_amount"
+                radius={[0, 7, 7, 0]}
+                barSize={14}
+                background={{ fill: 'var(--secondary)', radius: 7 } as object}
+              >
                 <LabelList
                   dataKey="pct"
                   position="right"

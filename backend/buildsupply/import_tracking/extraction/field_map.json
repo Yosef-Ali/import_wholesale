@@ -1,0 +1,98 @@
+{
+  "_comment": "Declarative map of which source document yields which cost-sheet field. Drives OCR/data-entry templates. `anchors` are BEST-GUESS candidate label strings (English + Amharic) seen on Ethiopian customs/bank/clearing paperwork — confirm/trim them against the real scans (matching is case-insensitive, substring). `target` is the Import Shipment fieldname (or charges[].description for a ledger line) and MUST NOT change — it ties to STANDARD_CHARGE_TEMPLATE in import_shipment.py.",
+  "documents": [
+    {
+      "doc_type": "commercial_invoice",
+      "label": "Commercial Invoice",
+      "primary": true,
+      "header_fields": [
+        {"target": "commercial_invoice_no", "anchors": ["Invoice No", "Invoice #", "Invoice Number", "Commercial Invoice No", "CI No", "Inv. No"]},
+        {"target": "supplier", "anchors": ["Seller", "Exporter", "Shipper", "Manufacturer", "Beneficiary", "From"]},
+        {"target": "invoice_value_fcy", "anchors": ["Total", "Total Amount", "FOB Total", "Grand Total", "Invoice Amount", "Total Value", "Amount (USD)", "FOB Value", "CIF"]},
+        {"target": "origin_country", "anchors": ["Country of Origin", "Origin", "Made In", "Country"]}
+      ],
+      "line_items": {
+        "target_table": "item_allocation",
+        "columns": {
+          "description": ["Description", "Goods", "Commodity", "Description of Goods", "Item"],
+          "qty": ["Qty", "Quantity", "PCS", "Pieces", "No. of Pcs"],
+          "fob_unit_price": ["Unit Price", "Price", "U/Price", "Unit Cost", "Unit Value"]
+        },
+        "note": "weight_basis = qty * fob_unit_price; this drives the landed-cost allocation"
+      },
+      "charge_line": {"description": "Invoice Price (FOB)", "is_fob": true, "charge_group": "Cost Basis"}
+    },
+    {
+      "doc_type": "packing_list",
+      "label": "Packing List",
+      "line_items": {
+        "target_table": "item_allocation",
+        "columns": {
+          "description": ["Description", "Goods", "Commodity"],
+          "qty": ["Qty", "Pcs", "Quantity", "Total Qty", "Cartons", "CTNS"]
+        },
+        "note": "use to cross-check qty against the commercial invoice"
+      }
+    },
+    {
+      "doc_type": "customs_declaration",
+      "label": "Customs Declaration / DVP sheet",
+      "header_fields": [
+        {"target": "declaration_number", "anchors": ["Declaration No", "Decl No", "Decl. No", "Reference Number", "Assessment No", "C-Number", "መግለጫ ቁጥር"]},
+        {"target": "tin_number", "anchors": ["TIN", "TIN No", "Tax Identification", "Taxpayer ID", "ቲን", "የግብር ከፋይ መለያ ቁጥር"]},
+        {"target": "tax_payer", "anchors": ["Tax Payer", "Importer", "Consignee", "Declarant", "Owner", "አስመጪ", "ግብር ከፋይ"]},
+        {"target": "dvp_value", "anchors": ["DVP", "Customs Value", "Assessed Value", "Duty Paying Value", "Taxable Value", "CIF Value", "የጉምሩክ ዋጋ"]}
+      ],
+      "charge_lines": [
+        {"description": "Customs Duty Tax (15%/35%)", "charge_group": "Duty & Tax", "anchors": ["Duty", "Customs Duty", "Import Duty", "ቀረጥ", "የጉምሩክ ቀረጥ"]},
+        {"description": "Sur tax", "charge_group": "Duty & Tax", "anchors": ["Surtax", "Sur Tax", "Sur-tax", "ሱርታክስ"]},
+        {"description": "Social Welfare Tax (3%)", "charge_group": "Duty & Tax", "anchors": ["Social Welfare", "Welfare", "Social Welfare Levy", "ማህበራዊ ደህንነት"]},
+        {"description": "Scanning Fee (7%)", "charge_group": "Duty & Tax", "anchors": ["Scanning", "Scanning Fee", "Scanner Fee"]},
+        {"description": "Vat Receivable", "charge_group": "Duty & Tax", "anchors": ["VAT", "Value Added Tax", "ተእታ", "ተጨማሪ እሴት ታክስ"]},
+        {"description": "Withholding On Customs", "charge_group": "Duty & Tax", "anchors": ["Withholding", "WHT", "Withholding Tax", "ዊዝሆልዲንግ", "የቅድሚያ ግብር"]}
+      ]
+    },
+    {
+      "doc_type": "freight_invoice",
+      "label": "Freight Invoice",
+      "header_fields": [{"target": "bl_number", "anchors": ["B/L", "BL No", "Bill of Lading", "B/L No", "BOL", "MBL", "HBL"]}],
+      "charge_lines": [
+        {"description": "Sea Freight Charge", "charge_group": "Cost Basis", "anchors": ["Ocean Freight", "Sea Freight", "Freight", "Freight Charges", "Freight (USD)"]}
+      ]
+    },
+    {
+      "doc_type": "clearing_agent_invoice",
+      "label": "Clearing / Transitor Agent Invoice",
+      "charge_lines": [
+        {"description": "Port Clearance charges (Djibouti)", "charge_group": "Cost Basis", "anchors": ["Port Clearance", "Djibouti", "Djibouti Port", "Port Charges"]},
+        {"description": "Transportation Cost From Djibouti to Modjo", "charge_group": "Freight & Logistics", "anchors": ["Djibouti to Modjo", "Transport", "Inland Transport", "Trucking", "Djibouti - Modjo"]},
+        {"description": "ESLSE Modjo Port/Terminal service", "charge_group": "Handling", "anchors": ["ESLSE", "Terminal", "Terminal Service", "Modjo Dry Port", "Dry Port"]},
+        {"description": "Transit Cost", "charge_group": "Freight & Logistics", "anchors": ["Transit", "Transit Cost", "Transit Fee"]},
+        {"description": "Container Unstuffing", "charge_group": "Handling", "anchors": ["Unstuffing", "Stripping", "Container Unstuffing", "Destuffing"]},
+        {"description": "Transportation Cost From Modjo to warehouse", "charge_group": "Freight & Logistics", "anchors": ["Modjo to warehouse", "Delivery", "Modjo - Addis", "Final Delivery"]},
+        {"description": "Demurrage", "charge_group": "Handling", "anchors": ["Demurrage", "Detention", "Storage", "Container Detention"]}
+      ]
+    },
+    {
+      "doc_type": "bank_advice",
+      "label": "Bank Permit & Charge Advice",
+      "header_fields": [
+        {"target": "bank_permit_number", "anchors": ["Permit No", "Permit", "Import Permit", "LC No", "L/C No", "CAD No", "የባንክ ፈቃድ"]},
+        {"target": "fcy_rate", "anchors": ["Rate", "Exchange Rate", "FX", "Selling Rate", "Buying Rate", "FCY Rate", "የምንዛሪ ተመን"]}
+      ],
+      "charge_lines": [
+        {"description": "Service Charge On Opening CAD", "charge_group": "Bank", "anchors": ["CAD", "Opening", "L/C", "LC Opening", "CAD Commission"]},
+        {"description": "Postage/Swift charges/exchange", "charge_group": "Bank", "anchors": ["Swift", "Postage", "Telex", "Swift Charge", "Cable"]},
+        {"description": "Bank Service Charge on Freight & Port", "charge_group": "Bank", "anchors": ["Service Charge", "Bank Service Charge", "Commission"]},
+        {"description": "Bank CPO charges", "charge_group": "Bank", "anchors": ["CPO", "CPO Charge", "Payment Order"]}
+      ]
+    },
+    {
+      "doc_type": "insurance_certificate",
+      "label": "Insurance Certificate",
+      "charge_lines": [
+        {"description": "Insurance", "charge_group": "Cost Basis", "anchors": ["Premium", "Insurance", "Insurance Premium", "Sum Insured", "Marine Insurance", "መድን", "ኢንሹራንስ"]}
+      ]
+    }
+  ]
+}

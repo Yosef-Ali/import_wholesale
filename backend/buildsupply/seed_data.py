@@ -3,30 +3,40 @@
 BuildSupply Pro — Ethiopian Construction Materials Seed Data
 Run: bench --site frontend execute buildsupply.seed_data.seed
 """
+from contextlib import contextmanager
+
 import frappe
 from frappe.model.document import Document
 
 
-# ── Monkey-patch select validation (bypass strict option matching) ──────────
-_orig_validate_selects = Document._validate_selects
-Document._validate_selects = lambda self: None
+@contextmanager
+def _selects_unvalidated():
+    """Skip select-option validation while seeding; always restored, even on error.
+
+    TODO: pin down which select values actually need this and drop the bypass.
+    """
+    orig = Document._validate_selects
+    Document._validate_selects = lambda self: None
+    try:
+        yield
+    finally:
+        Document._validate_selects = orig
 
 
 def seed():
     frappe.set_user("Administrator")
 
-    _create_company()
-    _create_item_groups()
-    _create_warehouses()
-    _create_items()
-    _create_suppliers()
-    _create_customers()
-    _create_price_tiers()
+    _ensure_locale()
+    with _selects_unvalidated():
+        _create_company()
+        _create_item_groups()
+        _create_warehouses()
+        _create_items()
+        _create_suppliers()
+        _create_customers()
+        _create_price_tiers()
 
     frappe.db.commit()
-
-    # Restore
-    Document._validate_selects = _orig_validate_selects
 
     print("\n✅ BuildSupply Pro seed data complete!")
     print("   Company:    BuildSupply Ethiopia PLC")
@@ -38,11 +48,26 @@ def seed():
     print("   React UI:   http://localhost:3000")
 
 
+def _ensure_locale():
+    """Fresh sites skip the setup wizard; without System Settings.language,
+    frappe v16's get_locale_value raises UnboundLocalError on any document
+    update (locale.py:52 — `value` unbound when frappe.local.lang is None)."""
+    ss = frappe.get_single("System Settings")
+    if not ss.language:
+        ss.language = "en"
+        ss.flags.ignore_mandatory = True
+        ss.save(ignore_permissions=True)
+
+
 # ── Company ────────────────────────────────────────────────────────────────
 
 def _create_company():
     if frappe.db.exists("Company", "BuildSupply Ethiopia PLC"):
         return
+    # Company creation auto-creates default warehouses, one of which links to the
+    # "Transit" warehouse type — only the setup wizard normally creates it.
+    if not frappe.db.exists("Warehouse Type", "Transit"):
+        frappe.get_doc({"doctype": "Warehouse Type", "__newname": "Transit"}).insert(ignore_permissions=True)
     doc = frappe.get_doc({
         "doctype": "Company",
         "company_name": "BuildSupply Ethiopia PLC",
@@ -137,6 +162,10 @@ ITEMS = [
 ]
 
 def _create_items():
+    for uom in sorted({it["uom"] for it in ITEMS}):
+        if not frappe.db.exists("UOM", uom):
+            frappe.get_doc({"doctype": "UOM", "uom_name": uom}).insert(ignore_permissions=True)
+
     for it in ITEMS:
         if frappe.db.exists("Item", it["code"]):
             continue
@@ -166,6 +195,10 @@ SUPPLIERS = [
 ]
 
 def _create_suppliers():
+    for g in sorted({s["group"] for s in SUPPLIERS}):
+        if not frappe.db.exists("Supplier Group", g):
+            frappe.get_doc({"doctype": "Supplier Group", "supplier_group_name": g, "parent_supplier_group": "All Supplier Groups"}).insert(ignore_permissions=True)
+
     for s in SUPPLIERS:
         if frappe.db.exists("Supplier", s["name"]):
             continue

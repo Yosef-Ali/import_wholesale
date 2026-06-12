@@ -1,0 +1,26 @@
+{
+  "doctype": "DocType",
+  "name": "Import Charge Line",
+  "module": "Import Tracking",
+  "istable": 1,
+  "editable_grid": 1,
+  "fields": [
+    {"fieldname": "sn", "fieldtype": "Int", "label": "S/N", "in_list_view": 1, "columns": 1},
+    {"fieldname": "description", "fieldtype": "Data", "label": "Description", "in_list_view": 1, "reqd": 1, "columns": 3},
+    {"fieldname": "charge_group", "fieldtype": "Select", "label": "Group", "in_list_view": 1, "columns": 2,
+      "options": "Cost Basis\nFreight & Logistics\nDuty & Tax\nHandling\nBank\nDeduction\nOther",
+      "default": "Freight & Logistics"},
+    {"fieldname": "customs_amount", "fieldtype": "Currency", "label": "Customs Invoice Price", "in_list_view": 1, "columns": 2,
+      "options": "Company:company:default_currency"},
+    {"fieldname": "etb_amount", "fieldtype": "Currency", "label": "Amount In ETB", "in_list_view": 1, "columns": 2,
+      "options": "Company:company:default_currency"},
+    {"fieldname": "is_fob", "fieldtype": "Check", "label": "Supplier Payable (FOB)", "default": 0,
+      "description": "Mark the goods invoice value owed to the supplier (posts to 1440)"},
+    {"fieldname": "capitalize", "fieldtype": "Check", "label": "Capitalize", "default": 1,
+      "description": "Include in item valuation / Landed Cost Voucher"},
+    {"fieldname": "recoverable", "fieldtype": "Check", "label": "Recoverable / Deduction", "default": 0,
+      "description": "VAT receivable, withholding, rebate — excluded from valuation"},
+    {"fieldname": "distribute", "fieldtype": "Check", "label": "Distribute to Items", "default": 1},
+    {"fieldname": "lcv_account", "fieldtype": "Link", "label": "Expense Account (LCV)", "options": "Account"}
+  ]
+}
