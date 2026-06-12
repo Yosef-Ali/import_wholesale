@@ -19,3 +19,6 @@ __pycache__/
 # Claude — personal/local overrides (shared config is .claude/settings.json)
 .claude/settings.local.json
 .gstack/
+
+# Stray root folder literally named " " (old Vercel SPA prototype, kept on purpose)
+/[ ]/
